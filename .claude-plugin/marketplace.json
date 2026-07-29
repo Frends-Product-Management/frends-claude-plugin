@@ -1,0 +1,18 @@
+{
+  "name": "frends",
+  "description": "Frends Platform MCP — work with your Frends tenant from Claude and Codex.",
+  "owner": {
+    "name": "Frends"
+  },
+  "plugins": [
+    {
+      "name": "frends",
+      "description": "Work with your Frends tenant — find and inspect Processes, diagnose failures, and build integrations — through the Frends Platform MCP.",
+      "source": "./frends",
+      "author": {
+        "name": "Frends"
+      },
+      "category": "productivity"
+    }
+  ]
+}

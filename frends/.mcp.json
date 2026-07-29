@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "frends": {
+      "type": "http",
+      "url": "${FRENDS_MCP_URL}",
+      "headers": {
+        "Authorization": "Bearer ${FRENDS_MCP_TOKEN}"
+      }
+    }
+  }
+}

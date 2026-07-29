@@ -1,2 +1,8 @@
 .DS_Store
 Thumbs.db
+
+# In this repository every .mcp.json is a plugin's MCP connector manifest,
+# never a local config file. A common global ignore rule excludes .mcp.json
+# everywhere, which would silently drop the connector from the published plugin.
+# Left unscoped on purpose so a second plugin directory is covered too.
+!.mcp.json
