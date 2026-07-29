@@ -23,38 +23,45 @@ In the Portal, open the admin area and create a Private Application. Grant it th
 
 ## Set the two variables
 
-Set these in the environment your AI client will actually see:
+Set these in the environment your AI client will actually see. `FRENDS_MCP_URL` is your MCP endpoint and `FRENDS_MCP_TOKEN` is the token.
 
-- `FRENDS_MCP_URL` is your MCP endpoint.
-- `FRENDS_MCP_TOKEN` is the token.
-
-On macOS or Linux:
+macOS and Linux:
 
 ```bash
 export FRENDS_MCP_URL="https://<your-tenant>.frendsapp.com/mcp"
 export FRENDS_MCP_TOKEN="<your token>"
 ```
 
-On Windows, `$env:NAME = "value"` sets a variable for the current PowerShell session, and `setx NAME "value"` sets it for future sessions. You usually want both.
+Windows PowerShell, for the current session only:
 
-Restart the client after setting them, so it reads the new values.
+```powershell
+$env:FRENDS_MCP_URL = "https://<your-tenant>.frendsapp.com/mcp"
+$env:FRENDS_MCP_TOKEN = "<your token>"
+```
+
+Windows, for future sessions as well:
+
+```powershell
+setx FRENDS_MCP_URL "https://<your-tenant>.frendsapp.com/mcp"
+setx FRENDS_MCP_TOKEN "<your token>"
+```
+
+Restart the client afterwards, so it reads the new values.
 
 ## First check
 
-Call `get_overview`. A working connection returns the Frends version, the Environments and the Agent Groups in the tenant, plus counts of Processes, Tasks and environment variables. If that answers, try `list_processes`.
+Call `get_overview`. A working connection returns the Frends version, the Environments and the Agent Groups in the tenant, plus counts of Processes, Tasks and environment variables. Keep the Agent Group IDs it gives you, because other tools ask for them.
 
 ## When it does not work
 
-Four failures cover almost every case. Read the actual error before you act, because the fix differs.
+Decide which of three situations you are in before choosing a fix. They have different causes and only one of them produces an HTTP status code.
 
-**No Frends tools appear, or the server never starts.** The two variables are not set in the environment the client sees. Set them and restart the client.
+**No Frends tools appear at all, or the server never starts.** Nothing reached the tenant, so there is no status code to read. Almost always the two variables are not set in the environment the client actually sees. Set them and restart the client.
 
-**401 Unauthorized.** Either the token has expired, or its Private Application is not admitted by the tenant's API Policy. Both are fixed in the Portal.
+**A call reaches the tenant and returns an error.** A 401 means either the token has expired or its Private Application is not admitted by the tenant's API Policy. Both are fixed in the Portal. A 404 means the Platform MCP is not enabled on this tenant, which an administrator turns on.
 
-**404 Not Found.** The Platform MCP is not enabled on this tenant. An administrator turns it on.
+**A call succeeds but the list is empty.** This is a normal successful response, not an error. Either the token's permissions do not cover that resource, or the tenant genuinely has nothing that matches. Widen or drop the filter first, then check the permissions.
 
-**A call succeeds but the list is empty.** Either the token's permissions do not cover that resource, or the tenant genuinely has nothing that matches. Widen or drop the filter first, then check the permissions.
-
-Do not guess between these. The status code tells you which one you have.
+Do not guess between the three. Check whether tools exist, then whether calls error, then whether results are empty.
 
 Works with: `get_overview`, `list_processes`, `list_guides`.

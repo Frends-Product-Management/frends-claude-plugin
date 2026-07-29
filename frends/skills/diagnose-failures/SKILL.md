@@ -9,30 +9,30 @@ This work is read-only. Look, explain, propose. Change nothing.
 
 ## Find the failing runs
 
-`get_process_instances` lists execution instances of Processes in an Agent Group. It needs at least one of a name filter or a set of Process GUIDs, so start from the Process the user named, or from `list_processes` when you only have a description to work from. Then filter by execution state to the failures and narrow the time range to the window that matters.
+`get_process_instances` lists execution instances in one Agent Group, so you need two things before you can call it.
 
-Each entry gives the execution id, the Process name and GUID, the state, start and end timestamps, error information, the trigger name, whether it is a subprocess, and any promoted variable values. Promoted variables are often the fastest clue, because they carry the business identifiers the integration was handling when it stopped.
+An Agent Group ID, which comes from `get_overview`. Instances are queried per Agent Group, so if you do not know where the Process runs, check the overview first.
+
+A name filter or a set of Process GUIDs. At least one is required. The filter matches Process names only, not descriptions, so if the user described the integration instead of naming it, find the real name with `list_processes` first.
+
+Then narrow with the state filter to the failed runs and set a time range around the window that matters. Each entry gives the execution ID, the Process name and GUID, the state, start and end timestamps, error information, the trigger name, whether it is a subprocess, and any promoted variable values. Promoted variables are often the fastest clue, because they carry the business identifiers the integration was handling when it stopped.
 
 ## Read one failure properly
 
-`get_process_instance_details` returns the full record for a single execution: version, state, timings, duration, Environment, Agent Group and Agent. Two of those fields do more work than the rest.
+`get_process_instance_details` takes the Agent Group ID and the execution ID from the previous call. It returns the Process GUID and version, state, timings, duration, Environment, Agent Group and Agent, the trigger parameters, the exception message, plus `HasLoggedSteps` and a `stepDataUri`.
 
-Which version ran. A failure that began right after a deploy points at the change, not at the data.
+Note what it does not return: a `deploymentId`, and no failing step id. So to look at how the failing Process is built, match by Process GUID against `list_processes` and read it with `get_process_data`. That only finds versions currently deployed. When the failure happened on a version that is no longer deployed, or when `HasLoggedSteps` points at step data you cannot reach, say so and move the user to the Portal rather than inspecting a different version and calling it the same one.
 
-Which Agent ran it. Failures on one Agent in a group while the others are fine point at that Agent or its surroundings, not at the Process logic.
+## Read the evidence as hints, not proof
 
-## Correlate to the Process
+Some patterns narrow the search, but none of them prove a cause on their own. Treat each as a next thing to check.
 
-Once you know where a run stopped, read how that step is built. `get_process_data` with the deployment id gives the model. To walk the shape tree, fork the Process to a draft and use `process_get_structure`, then `process_get_shape_config` for the step itself. Match the failing step to its real configuration before forming an opinion.
-
-## Separate the incident from the pattern
-
-One failure and a thousand failures need different answers, so count them and look at the timestamps. A single failed run is usually the data. Every run failing since a point in time is usually a change or a dependency that is down. Failures at regular intervals suggest a schedule or a rate limit.
+Failures that begin right after a deploy make the change the first suspect, so compare the failing version with the previous one. Failures on one Agent while others in the group are fine make that Agent and its surroundings worth checking before the Process logic. A single failed run among many successes points at that run's data first. Failures at regular intervals suggest a schedule or a rate limit. In every one of these, bad data, a dependency being down, configuration and the Process itself can all produce the same shape, so confirm before concluding.
 
 ## What to hand back
 
 Say what failed, when it started, how many runs are affected, and the narrowest cause the evidence actually supports. Where the evidence runs out, say that. A named uncertainty is more useful than a confident guess, because the user can go and check it.
 
-Then propose the next step and let the user take it. Retrying a run, editing a Process, changing an environment variable and deploying a new version are all decisions for the user in the Portal. Do not make them on their behalf.
+Then propose the next step and let the user take it. Retrying a run, editing a Process, changing an environment variable and deploying a new version are all the user's decisions.
 
-Works with: `get_process_instances`, `get_process_instance_details`, `list_processes`, `get_process_data`, `process_get_structure`, `process_get_shape_config`.
+Works with: `get_overview`, `get_process_instances`, `get_process_instance_details`, `list_processes`, `get_process_data`, `process_get_structure`, `process_get_shape_config`.
