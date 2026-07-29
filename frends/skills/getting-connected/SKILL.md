@@ -54,14 +54,16 @@ Call `get_overview`. A working connection returns the Frends version, the Enviro
 
 ## When it does not work
 
-Decide which of three situations you are in before choosing a fix. They have different causes and only one of them produces an HTTP status code.
+Decide which of these four failures you have before choosing a fix. They have different causes, and only the two middle ones produce an HTTP status code.
 
 **No Frends tools appear at all, or the server never starts.** Nothing reached the tenant, so there is no status code to read. Almost always the two variables are not set in the environment the client actually sees. Set them and restart the client.
 
-**A call reaches the tenant and returns an error.** A 401 means either the token has expired or its Private Application is not admitted by the tenant's API Policy. Both are fixed in the Portal. A 404 means the Platform MCP is not enabled on this tenant, which an administrator turns on.
+**A call returns 401.** Either the token has expired, or its Private Application is not admitted by the tenant's API Policy. Both are fixed in the Portal.
+
+**A call returns 404.** The Platform MCP is not enabled on this tenant. An administrator turns it on.
 
 **A call succeeds but the list is empty.** This is a normal successful response, not an error. Either the token's permissions do not cover that resource, or the tenant genuinely has nothing that matches. Widen or drop the filter first, then check the permissions.
 
-Do not guess between the three. Check whether tools exist, then whether calls error, then whether results are empty.
+Do not guess between them. Check whether the tools exist at all, then whether a call errors, then whether a successful result is simply empty.
 
 Works with: `get_overview`, `list_processes`, `list_guides`.

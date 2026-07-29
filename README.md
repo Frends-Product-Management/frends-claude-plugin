@@ -82,8 +82,8 @@ written for Claude clients, but the tools work the same way from Codex.
 
 ## Troubleshooting
 
-Work out which of three situations you have before changing anything. Only one of them
-produces an HTTP status code.
+Work out which of these four failures you have before changing anything. Only the two
+middle ones produce an HTTP status code, so read the actual response first.
 
 **No Frends tools appear, or the server never starts.** Nothing reached the tenant, so
 there is no status code. Almost always `FRENDS_MCP_URL` and `FRENDS_MCP_TOKEN` are not set
