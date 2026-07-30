@@ -17,7 +17,7 @@ Your MCP endpoint is your Portal address followed by `/mcp`, for example
 Add the marketplace and install the plugin:
 
 ```
-/plugin marketplace add FrendsPlatform/frends-claude-plugin
+/plugin marketplace add Frends-Product-Management/frends-claude-plugin
 /plugin install frends@frends
 ```
 
@@ -45,7 +45,7 @@ Restart Claude Code so it reads the new values, then ask it to call `get_overvie
 
 ## Install in Claude (web and Desktop)
 
-Open plugin settings, add `FrendsPlatform/frends-claude-plugin` as a marketplace, then
+Open plugin settings, add `Frends-Product-Management/frends-claude-plugin` as a marketplace, then
 install the `frends` plugin from it.
 
 On claude.ai and Claude Desktop the plugin installs and its skills work; the live tenant connector currently requires Claude Code or Codex — web and Desktop connector support arrives with Frends' OAuth-based remote MCP.
