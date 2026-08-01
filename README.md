@@ -69,6 +69,8 @@ url = "https://<your-tenant>.frendsapp.com/mcp"
 bearer_token_env_var = "FRENDS_MCP_TOKEN"
 ```
 
+`integration-planning` is the one skill here that needs no tenant connection: it interviews and writes a plan, so the same file also works pasted or attached as a plain instruction document in an AI client this repository does not package for. No install path outside Claude Code, Claude Desktop and Codex is claimed or tested.
+
 Set `FRENDS_MCP_TOKEN` in your shell as shown above. The skills in this repository are
 written for Claude clients, but the tools work the same way from Codex.
 
@@ -79,6 +81,7 @@ written for Claude clients, but the tools work the same way from Codex.
 - Why did this integration start failing yesterday?
 - Which Tasks are available in our tenant, and what parameters does this one take?
 - Build me a draft that reads from an endpoint and writes the result somewhere.
+- I want to connect our webshop to our ERP; ask me what you need and write the plan.
 
 ## Troubleshooting
 
@@ -107,6 +110,7 @@ nothing matching. Widen or drop the filter first, then check the permissions.
 | `find-and-inspect` | Finding Processes and explaining how one is built |
 | `diagnose-failures` | Investigating failed runs, read-only |
 | `build-a-process` | Building a draft up to a passing validation |
+| `integration-planning` | Interviewing for requirements and writing the integration plan, before any building |
 
 ## For maintainers
 
