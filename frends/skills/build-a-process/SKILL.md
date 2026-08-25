@@ -23,6 +23,27 @@ Forking from a deployment only works when that deployment is the Process's lates
 
 Keep the `draftId` you get back. Every later call needs it.
 
+## Plan the build order first
+
+When the plan names several Processes, or the work is large enough that you cannot hold it in one pass, write the build order before you create anything.
+
+A slice is one path from trigger to outcome that ends at a clean `validate_process`. Not a layer: adding every Task, then every connection, then error handling is three passes over the same Process, and nothing is verifiable until the last one. Build the first slice thin, validate, then widen.
+
+Order the slices by what blocks what:
+
+1. Preparation comes first. A Task package that is not installed and an environment variable name that does not exist block everything that uses them.
+2. A shared building block other Processes call is always a blocker and never blocked. Build it before its callers.
+3. Inside one Process, start with a Manual Trigger so every slice can be tried, and swap in the real trigger as the last slice. That final swap removes the easy way to run it, so it belongs at the end.
+4. Two Processes that do not depend on each other can be built in either order. Slices inside one draft are strictly sequential: one draft is one shape graph, and two sets of changes to it interleave into a mess no tool will untangle.
+
+Every slice is verifiable by validation. A slice is only demonstrable when the user agrees to a run, so never promise a demonstration you need permission to give.
+
+Then show the user the order before building: each slice with its number, what it delivers, and what it waits for. Ask whether the granularity is right, whether the blocking is right, whether anything should be merged or split, and, for each Process, whether it is a brand-new Process or a new version of one that exists. Build after they agree.
+
+Write the order in names and outcomes. A draft id belongs to a draft that promotion consumes, and a deployment id points at a version that moves, so neither survives long enough to be worth writing down.
+
+Changing what a shared building block expects from its callers is the one case where thin slices do not work, because every caller breaks at once. Do it in three stages instead: add the new form beside the old one so nothing breaks, move the callers over one Process at a time, each forked with mode 'edit' so it stays the same Process, and remove the old form only when no caller is left.
+
 ## The sequence
 
 1. Add exactly one trigger. `process_add_manual_trigger` while you are still testing, or the trigger the integration really needs, such as `process_add_http_trigger`, `process_add_schedule_trigger` or `process_add_mcp_trigger`.
@@ -80,5 +101,7 @@ Promoting is itself a deployment. `create_process_from_draft` validates and comp
 ## Where you stop
 
 Your work ends at a validated draft. Done means the last `validate_process` call ran after your final change and returned zero errors; report that result, what you built, whether the draft is linked to an existing Process, and where it is. Say what you would do next, and let the user choose.
+
+When the draft was built from a plan, offer a review of the draft against that plan before anyone promotes it. Validation proves the draft compiles; it says nothing about whether the draft does what was asked.
 
 Uses (verify against the session's tool list): `create_process_draft`, `list_process_drafts`, `process_add_manual_trigger`, `process_add_http_trigger`, `process_add_schedule_trigger`, `process_add_mcp_trigger`, `process_add_task`, `process_add_expression`, `process_add_decision`, `process_add_decision_branch`, `process_add_foreach`, `process_add_while`, `process_add_scope`, `process_add_catch`, `process_add_connection`, `process_edit_shape`, `process_get_structure`, `validate_process`, `list_tasks`, `inspect_task`, `start_process`, `create_process_from_draft`, `deploy_process`. Optional: `process_batch_mutate`.

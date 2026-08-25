@@ -27,6 +27,12 @@ Then narrow with the state filter to the failed runs and set a time range around
 
 Note what it does not return: a `deploymentId`, and no failing step id. So to look at how the failing Process is built, match by Process GUID against `list_processes` and read it with `get_process_data`. That only finds versions currently deployed. When the failure happened on a version that is no longer deployed, or when `HasLoggedSteps` points at step data you cannot reach, say so and move the user to the Portal rather than inspecting a different version and calling it the same one.
 
+## Name several causes before you test any
+
+Write down three to five possible causes and rank them before you start checking. The first plausible explanation is the one you will find evidence for, because you will go looking for it; naming the alternatives first is what keeps the search honest.
+
+Show the ranked list to the user before you test it. They often know something that re-ranks it in one sentence, such as which system was patched yesterday. Do not wait for them: if they are not there, work your own ranking and say which one you started with.
+
 ## Read the evidence as hints, not proof
 
 Some patterns narrow the search, but none of them prove a cause on their own. Treat each as a next thing to check.
