@@ -7,9 +7,13 @@ description: Investigate failed or slow Process runs in a Frends tenant and expl
 
 This work is read-only. Look, explain, propose. Change nothing.
 
+## Check the session's tool list first
+
+Use a named tool only if it appears in this session's tool list. A missing tool means this session does not expose it, which can be the connection, an API Policy, or the platform version, so say "This session does not expose `<tool>`" rather than guessing at the cause. Continue only when another exposed tool preserves the meaning and safety of the request; when none does, stop and say which step is blocked.
+
 ## Find the failing runs
 
-`get_process_instances` lists execution instances in one Agent Group, so you need two things before you can call it.
+`get_process_instances` lists Process instances in one Agent Group, so you need two things before you can call it.
 
 An Agent Group ID, which comes from `get_overview`. Instances are queried per Agent Group, so if you do not know where the Process runs, check the overview first.
 
@@ -33,6 +37,6 @@ Failures that begin right after a deploy make the change the first suspect, so c
 
 Say what failed, when it started, how many runs are affected, and the narrowest cause the evidence actually supports. Where the evidence runs out, say that. A named uncertainty is more useful than a confident guess, because the user can go and check it.
 
-Then propose the next step and let the user take it. Retrying a run, editing a Process, changing an environment variable and deploying a new version are all the user's decisions.
+Then propose the next step and let the user take it. Retrying a run, editing a Process, changing an environment variable and deploying a new version are all the user's decisions. Deleting a Process, undeploying and deactivating are Portal work these tools do not offer, so name what should be cleaned up and leave the cleanup to the user.
 
-Works with: `get_overview`, `get_process_instances`, `get_process_instance_details`, `list_processes`, `get_process_data`, `process_get_structure`, `process_get_shape_config`.
+Uses (verify against the session's tool list): `get_overview`, `get_process_instances`, `get_process_instance_details`, `list_processes`, `get_process_data`, `process_get_structure`, `process_get_shape_config`.

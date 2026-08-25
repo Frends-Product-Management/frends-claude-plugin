@@ -9,6 +9,10 @@ description: Connect to a Frends tenant and fix a connection that is not working
 
 The Frends Platform MCP is a server that runs inside your Frends tenant. It lets an AI client read and build integrations in that tenant over the Model Context Protocol.
 
+## Check the session's tool list first
+
+Use a named tool only if it appears in this session's tool list. A missing tool means this session does not expose it, which can be the connection, an API Policy, or the platform version, so say "This session does not expose `<tool>`" rather than guessing at the cause. Continue only when another exposed tool preserves the meaning and safety of the request; when none does, stop and say which step is blocked.
+
 ## What you need
 
 A Frends tenant with the Platform MCP enabled, and an API token issued by a Private Application in the Frends Portal.
@@ -54,7 +58,7 @@ Call `get_overview`. A working connection returns the Frends version, the Enviro
 
 ## When it does not work
 
-Decide which of these four failures you have before choosing a fix. They have different causes, and only the two middle ones produce an HTTP status code.
+Decide which of these five failures you have before choosing a fix. They have different causes, and only the 401 and 404 cases produce an HTTP status code.
 
 **No Frends tools appear at all, or the server never starts.** Nothing reached the tenant, so there is no status code to read. Almost always the two variables are not set in the environment the client actually sees. Set them and restart the client.
 
@@ -64,6 +68,8 @@ Decide which of these four failures you have before choosing a fix. They have di
 
 **A call succeeds but the list is empty.** This is a normal successful response, not an error. Either the token's permissions do not cover that resource, or the tenant genuinely has nothing that matches. Widen or drop the filter first, then check the permissions.
 
-Do not guess between them. Check whether the tools exist at all, then whether a call errors, then whether a successful result is simply empty.
+**Most tools work, but one specific tool is missing.** This is not a broken connection and it does not mean the tenant lacks the capability. A tool appears in the session only when an API Policy targets it and the calling Private Application is granted access, and the platform version also decides which tools exist. Check the API Policy and the grant in the Portal before anything else.
 
-Works with: `get_overview`, `list_processes`, `list_guides`.
+Do not guess between them. Check whether the tools exist at all, then whether one specific tool is missing, then whether a call errors, then whether a successful result is simply empty.
+
+Uses (verify against the session's tool list): `get_overview`, `list_processes`, `list_guides`.

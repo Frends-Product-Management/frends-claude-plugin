@@ -1,9 +1,15 @@
 ---
 name: find-and-inspect
-description: Find Processes in a Frends tenant and explain how one is built. Use when someone asks what integrations exist, where a Process is deployed, which version is live, what a Process does internally, or which Tasks and environment variables the tenant has.
+description: Find Processes in a Frends tenant and explain how one is built. Use when someone asks what integrations exist, where a Process is deployed, which version is live, what a Process does internally, or which Tasks and environment variables the tenant has. Do not use for building or changing anything.
 ---
 
 # Finding and inspecting Processes
+
+This work is reading. Building, editing, promoting and running a Process are build work: hand those over rather than doing them from here.
+
+## Check the session's tool list first
+
+Use a named tool only if it appears in this session's tool list. A missing tool means this session does not expose it, which can be the connection, an API Policy, or the platform version, so say "This session does not expose `<tool>`" rather than guessing at the cause. Continue only when another exposed tool preserves the meaning and safety of the request; when none does, stop and say which step is blocked.
 
 ## Start broad, then narrow
 
@@ -17,11 +23,13 @@ Two things follow from that shape. Drafts do not appear here, so use `list_proce
 
 For the shape of a Process rather than the whole model, `process_get_structure` gives the tree of shapes with their ids, types and outgoing connections, and `process_get_shape_config` reads one shape's full configuration. Both read drafts only.
 
-That draft-only limit has a real edge. You can fork a deployed Process into a draft with `create_process_draft`, but only when the deployment is the Process's latest version, which is the version deployed in the Development Environment. An older version running in another Agent Group cannot be opened this way, so read it with `get_process_data` instead, or go to the Portal.
+That draft-only limit has a real edge. To inspect a deployed Process with those tools, fork it into a draft safely: `create_process_draft` with the `deploymentId` and mode 'new' makes an unlinked copy that leaves the deployment alone. Forking only works when the deployment is the Process's latest version, which is the version deployed in the Development Environment; an older version running in another Agent Group cannot be opened this way, so read it with `get_process_data` instead, or go to the Portal. Anything beyond that fork, such as editing the draft or promoting it, is build work.
 
 ## Tenant context
 
 `get_overview` gives the Frends version, the Environments and the Agent Groups, including the Agent Group IDs that other tools ask for. `list_environment_variables` lists the environment variable groups with their per-environment values. These are Frends environment variables managed in the Portal, which are a different thing from the variables you set on your own machine to connect.
+
+When reporting environment variables, show names and structure. Do not print values unless the user explicitly asks for a specific one, and never print a value that looks like a secret.
 
 ## Tasks
 
@@ -37,4 +45,4 @@ Keep the identifiers you were given. The `deploymentId` and `draftId` are what t
 
 Point back to the Portal for anything visual and anything the user has to decide. A Process is far easier to read as a diagram than as BPMN, and version history, deployment state and permissions all live there.
 
-Works with: `list_processes`, `list_process_drafts`, `get_process_data`, `process_get_structure`, `process_get_shape_config`, `create_process_draft`, `get_overview`, `list_environment_variables`, `list_tasks`, `search_task_packages`, `inspect_task`.
+Uses (verify against the session's tool list): `list_processes`, `list_process_drafts`, `get_process_data`, `process_get_structure`, `process_get_shape_config`, `create_process_draft`, `get_overview`, `list_environment_variables`, `list_tasks`, `search_task_packages`, `inspect_task`.
