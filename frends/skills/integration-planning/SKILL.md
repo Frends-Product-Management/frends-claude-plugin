@@ -1,6 +1,6 @@
 ---
 name: integration-planning
-description: Interview someone about an integration they want, one topic at a time, and turn their answers into a written integration plan the build step can work from. Use when someone asks to connect two systems, describes an integration they want built, or says they want to plan or scope an integration before building it.
+description: Interview someone about an integration they want, one topic at a time, and turn their answers into a written integration plan the build step can work from, or synthesize the same plan from a conversation that already happened. Use when someone asks to connect two systems, describes an integration they want built, says they want to plan or scope an integration before building it, or asks to turn an earlier discussion into a plan.
 ---
 
 # Planning an integration before you build it
@@ -8,6 +8,18 @@ description: Interview someone about an integration they want, one topic at a ti
 Most integration requests arrive as one sentence: "connect our webshop to our ERP". That sentence hides a dozen decisions. Build first and you discover them one crash at a time. This skill turns the sentence into a plan.
 
 Your job here is to interview, then write. You are not building anything in this skill, and you should not start.
+
+## Check the session's tool list first
+
+Use a named tool only if it appears in this session's tool list. A missing tool means this session does not expose it, which can be the connection, an API Policy, or the platform version, so say "This session does not expose `<tool>`" rather than guessing at the cause. Continue only when another exposed tool preserves the meaning and safety of the request; when none does, stop and say which step is blocked.
+
+This skill also works with no tenant connected at all: the interview and the plan need no tools. The tenant lookup below is an upgrade, not a requirement.
+
+## Facts are your job; decisions are the user's
+
+Before asking a topic, check whether you can answer it yourself. When a Frends tenant is connected, look up what it already knows: which Processes exist, which Tasks are installed, which environment variable names are defined. Ask the user only for decisions and for knowledge that lives outside the tenant.
+
+Translate everything you look up into business words before speaking. Never interview in platform vocabulary: say "a person starts it by hand", not "Manual Trigger"; say "the connection details are already stored", not the variable group's name. The plan can carry the technical terms; the interview cannot.
 
 ## Interview one topic at a time
 
@@ -24,11 +36,10 @@ Restate the goal once, in your own words, so the person can correct you cheaply.
 Rules that make this work:
 
 - **One topic per message.** Never ask about two topics at once, however short the questions look. A wall of questions gets a wall of silence, or answers to the easy half only.
-- **Offer two or three example answers** with each question. People answer "how often should this run?" badly, and answer "hourly, nightly, or as soon as each order appears?" well.
-- **Skip what they already told you** — acknowledge it instead. If the first sentence said "when an order is paid", the trigger topic is answered; confirm it and move on.
-- **One follow-up per topic, maximum.** If the answer is still unclear after that, write it into `## 9. Open questions` and keep going. An interview that never ends produces no plan.
-
-- **Listen for work that should be shared, and ask once.** If a step they describe sounds like something other integrations in their estate also need (a lookup, a format conversion, a notification, a call to a common system), ask whether it should be built once as a shared building block that other integrations call, or built inside this one. Ask this at most once per interview, at the moment it comes up, and do not add a topic for it. Record the answer under `## 1. Overview`, or under `## 9. Open questions` if they do not know. Real integrations lean on shared flows heavily, so a plan that assumes every step is built fresh will overstate the work.
+- **Offer two or three example answers** with each question, and attach a suggested answer when you have grounds for one. Mark the suggestion as rejectable: "if you are not sure, I would start hourly, but say so and we will leave it open." Suggest only for decisions. Never substitute a suggestion for a fact you could not establish.
+- **Skip what they already told you** and acknowledge it instead. If the first sentence said "when an order is paid", the trigger topic is answered; confirm it and move on.
+- **One follow-up per topic, maximum, and a challenge counts as that follow-up.** When an answer is vague, challenge it by rephrasing and confirming ("so the same order can arrive twice and that is fine?"), never by cross-examining. If it is still unclear after that, write it into `## 9. Open questions` and keep going. An interview that never ends produces no plan.
+- **Listen for work that should be shared, and ask once.** If a step they describe sounds like something other integrations in their estate also need (a lookup, a format conversion, a notification, a call to a common system), ask whether it should be built once as a shared building block that other integrations call, or built inside this one. Ask this at most once per interview, at the moment it comes up, and do not add a topic for it. Record the answer under `## 1. Overview`, or under `## 9. Open questions` if they do not know. Real integrations lean on shared building blocks heavily, so a plan that assumes every step is built fresh will overstate the work.
 - **Do not invent answers.** "Not established" is a real, useful outcome. A plan that admits three unknowns is far more valuable than one that quietly guesses them.
 
 ### What to ask about in each topic
@@ -47,9 +58,19 @@ Rules that make this work:
 
 **Auth and secrets** — how each side authenticates, which credentials are needed by name, and where they are stored. Never ask anyone to paste a secret into the conversation. Record the NAME of each credential and nothing else.
 
+## Turning an existing conversation into the plan
+
+When the answers already exist in the conversation, do not re-interview. Synthesize the plan from what was actually said, and write `Not established — see Open questions` for everything that was not. Every filled section must be traceable to something the person actually said; do not complete a pattern because it sounds likely.
+
+Check coverage before writing. If more than half of the ten headings would read "Not established", the conversation is too thin for a plan: say so, and offer a short interview on just the gaps instead of producing a hollow document.
+
+## Read it back before you write it
+
+Before the formal plan, read your understanding back in plain language: a few sentences of what will happen, in the user's own words, ending with what you are least sure about. Let them correct it. Write the plan only after they agree the understanding is right.
+
 ## Write the plan
 
-When the seven topics are done, write the plan using **exactly these ten headings**, in this order, every time. Always emit all ten. Where something is genuinely unknown, write `Not established — see Open questions` under that heading rather than deleting it. The same shape every time is what makes these plans comparable and reviewable.
+When the topics are done, write the plan using **exactly these ten headings**, in this order, every time. Always emit all ten. Where something is genuinely unknown, write `Not established — see Open questions` under that heading rather than deleting it. The same shape every time is what makes these plans comparable and reviewable.
 
 ```markdown
 ## 1. Overview
@@ -64,7 +85,9 @@ When the seven topics are done, write the plan using **exactly these ten heading
 ## 10. Build handoff
 ```
 
-Guidance per section: keep **1. Overview** to a few sentences a stakeholder can read — what moves, from where to where, and why. If any part of the integration should be a shared building block other integrations call, say so here in one sentence. Put the field-by-field mapping in **5** as a table with source field, target field, and transformation; that table is the section builders will use most. Keep **9. Open questions** honest and specific, each phrased so it can be answered by one person in one sentence. List credentials in **8** by name only.
+Guidance per section: keep **1. Overview** to a few sentences a stakeholder can read — what moves, from where to where, and why. Add two short lists there: what is out of scope (one or two lines; naming what this integration deliberately does not do stops the build from growing it), and acceptance criteria (two or three checks that would show the integration works, each verifiable by a person). If any part of the integration should be a shared building block other integrations call, say so here in one sentence. Put the field-by-field mapping in **5** as a table with source field, target field, and transformation; that table is the section builders will use most. Keep **9. Open questions** honest and specific, each phrased so it can be answered by one person in one sentence, and name that person or role. List credentials in **8** by name only.
+
+The plan is aligned with the Frends Integration Requirements Document (FIRD), the format a Frends integration is specified in for delivery, so a delivery team can pick the plan up without translation. One plan describes one integration need, but the build may implement it as one Process or several: split when parts start from different triggers or schedules, when a part is a shared building block other integrations call, or when one Process would be too large to read and validate. The build handoff names every Process the plan implies.
 
 ## The build handoff block
 
@@ -72,6 +95,7 @@ End the plan with a structured summary the build step can read. Use this block w
 
 ```yaml
 integration_name: order-status-sync
+confirmation_status: pending   # set to confirmed only after the user approves the plan
 source:
   system: webshop
   interface: REST API
@@ -80,14 +104,17 @@ target:
   system: ERP
   interface: REST API
   auth_method: API key in header
-trigger:
-  type: schedule
-  config_summary: hourly, 07:00-19:00 on weekdays
-steps:
-  - read orders changed since the last run
-  - look up the customer in the target system
-  - create or update the order
-  - report a summary
+processes:
+  - name: order-status-sync
+    trigger:
+      type: schedule
+      config_summary: hourly, 07:00-19:00 on weekdays
+    steps:
+      - read orders changed since the last run
+      - look up the customer in the target system
+      - create or update the order
+      - report a summary
+    depends_on: []
 mappings:
   - source_field: order.id
     target_field: SalesOrder.ExternalId
@@ -103,13 +130,18 @@ credentials_needed:
   - webshop_client_secret
   - erp_api_key
 open_questions:
-  - which side owns the customer record if both have changed
+  - question: which side owns the customer record if both have changed
+    owner: ERP product owner
 ```
 
-Treat these keys as a working shape rather than a fixed contract: they are chosen to carry what a build step needs, and they may be adjusted as the receiving side firms up. Keep the keys stable within a plan, and never put a secret VALUE in `credentials_needed` — names only.
+`processes` is a list on purpose: when the plan splits the work, add one entry per Process, each with its own trigger and steps, and use `depends_on` to name which Processes must exist first. Treat these keys as a working shape rather than a fixed contract: they are chosen to carry what a build step needs, and they may be adjusted as the receiving side firms up. Keep the keys stable within a plan, and never put a secret VALUE in `credentials_needed` — names only.
+
+Do not start building, and do not let a build step start, until the user has confirmed the plan; record that in `confirmation_status`.
 
 ## Staying useful across tools
 
-This skill deliberately contains no product-specific knowledge: no task names, no platform-specific field names, no assumptions about which engine runs the result. That is what lets one plan serve a review conversation, a ticket, and an automated build step equally well. The platform's own build step supplies the product specifics when the plan is handed over — in a Frends context, that is where task and connector knowledge lives, not here.
+This skill keeps product knowledge out of the interview: no Task names, no platform-specific field names in the questions. Two Frends-specific things are deliberate: when a tenant is connected the skill may look facts up there, and the written plan is FIRD-aligned. The build step supplies the rest when the plan is handed over — in a Frends context, that is where Task and Task package knowledge lives, not here.
 
 The file is a plain instruction document. It loads automatically as a skill in Claude Code and Claude Desktop, and the same text can be pasted or attached as context in another AI client with no change.
+
+Uses (verify against the session's tool list, all optional): `get_overview`, `list_processes`, `list_tasks`, `list_environment_variables`.
