@@ -27,6 +27,8 @@ Rules that make this work:
 - **Offer two or three example answers** with each question. People answer "how often should this run?" badly, and answer "hourly, nightly, or as soon as each order appears?" well.
 - **Skip what they already told you** — acknowledge it instead. If the first sentence said "when an order is paid", the trigger topic is answered; confirm it and move on.
 - **One follow-up per topic, maximum.** If the answer is still unclear after that, write it into `## 9. Open questions` and keep going. An interview that never ends produces no plan.
+
+- **Listen for work that should be shared, and ask once.** If a step they describe sounds like something other integrations in their estate also need (a lookup, a format conversion, a notification, a call to a common system), ask whether it should be built once as a shared building block that other integrations call, or built inside this one. Ask this at most once per interview, at the moment it comes up, and do not add a topic for it. Record the answer under `## 1. Overview`, or under `## 9. Open questions` if they do not know. Real integrations lean on shared flows heavily, so a plan that assumes every step is built fresh will overstate the work.
 - **Do not invent answers.** "Not established" is a real, useful outcome. A plan that admits three unknowns is far more valuable than one that quietly guesses them.
 
 ### What to ask about in each topic
@@ -62,7 +64,7 @@ When the seven topics are done, write the plan using **exactly these ten heading
 ## 10. Build handoff
 ```
 
-Guidance per section: keep **1. Overview** to a few sentences a stakeholder can read — what moves, from where to where, and why. Put the field-by-field mapping in **5** as a table with source field, target field, and transformation; that table is the section builders will use most. Keep **9. Open questions** honest and specific, each phrased so it can be answered by one person in one sentence. List credentials in **8** by name only.
+Guidance per section: keep **1. Overview** to a few sentences a stakeholder can read — what moves, from where to where, and why. If any part of the integration should be a shared building block other integrations call, say so here in one sentence. Put the field-by-field mapping in **5** as a table with source field, target field, and transformation; that table is the section builders will use most. Keep **9. Open questions** honest and specific, each phrased so it can be answered by one person in one sentence. List credentials in **8** by name only.
 
 ## The build handoff block
 
