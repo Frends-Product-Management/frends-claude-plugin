@@ -23,6 +23,10 @@ Forking from a deployment only works when that deployment is the Process's lates
 
 Keep the `draftId` you get back. Every later call needs it.
 
+## Read the plan's open questions before you start
+
+When the work comes from a plan, check its open questions first. A question marked as blocking means the Process it blocks cannot be built yet, whatever else the plan contains, and a confirmed plan can still carry one. Build what is not blocked, say which Process is waiting and on whose answer, and do not fill the gap with a guess.
+
 ## Plan the build order first
 
 When the plan names several Processes, or the work is large enough that you cannot hold it in one pass, write the build order before you create anything.

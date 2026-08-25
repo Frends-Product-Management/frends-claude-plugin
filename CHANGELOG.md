@@ -16,7 +16,7 @@
   - The operating system is asked before a command block is shown, instead of showing three blocks to everyone.
   - The five failure cases become a table ordered by the checks to run, so someone arriving with a symptom can enter there rather than reading the setup first.
 
-- `integration-planning`: number the questions inside a topic, each with a suggested answer, and let a question that depends on an unanswered one wait for the next message. Topics stay one per message.
+- `integration-planning`: number the questions inside a topic, suggest an answer to those you have grounds to suggest one for, and let a question that depends on an unanswered one wait for the next message. Topics stay one per message.
 
   - The error-handling topic now asks two or three of its questions as stories, because a person who cannot answer a question about idempotency answers "what should happen if the same order arrives twice" immediately, and that answer is the requirement.
   - A rejected suggestion is recorded with the reason, so the next reader does not propose it again and make the customer explain twice.
@@ -27,7 +27,7 @@
 - `build-a-process`: plan the build order before building when the plan names several Processes.
 
   - A slice is one path from trigger to outcome ending at a clean validation, never a layer applied across the whole Process.
-  - Preparation and shared building blocks are always blockers; a Manual Trigger comes first so each slice can be tried, and the real trigger is swapped in last.
+  - Preparation and shared building blocks are always blockers; a Manual Trigger comes first because it leaves the Process inert while it is built, and the real trigger is swapped in last.
   - Changing what a shared building block expects from its callers is handled in three stages instead of one edit, because every caller breaks at once otherwise.
   - The skill now offers a review of the finished draft against its plan, since validation proves only that the draft compiles.
 

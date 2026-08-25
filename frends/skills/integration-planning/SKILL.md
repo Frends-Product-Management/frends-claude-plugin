@@ -154,7 +154,11 @@ credentials_needed:
 open_questions:
   - question: which side owns the customer record if both have changed
     owner: ERP product owner
+    blocking: true          # true means no build starts until this is answered
+    blocks: [order-status-sync]
 ```
+
+Every open question carries `blocking`, and a blocking one names the Processes waiting on it in `blocks`. A plan whose `confirmation_status` is `confirmed` can still hold a blocking question, and a build step reads that before it starts.
 
 `processes` is a list on purpose: when the plan splits the work, add one entry per Process, each with its own trigger and steps, and use `depends_on` to name which Processes must exist first.
 
