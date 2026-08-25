@@ -1,75 +1,89 @@
 ---
 name: getting-connected
-description: Connect to a Frends tenant and fix a connection that is not working. Use when the Frends tools are missing, when a call returns 401 or 404, when lists come back empty, or when someone is setting up Frends for the first time.
+description: Connect an AI client to a Frends tenant, and work out why a connection is not working. Use when the Frends tools are missing, when a call returns 401 or 404, when lists come back empty, when one specific tool is absent, or when someone is setting up Frends for the first time.
 ---
 
 # Getting connected to your Frends tenant
 
-## What the Platform MCP is
-
 The Frends Platform MCP is a server that runs inside your Frends tenant. It lets an AI client read and build integrations in that tenant over the Model Context Protocol.
+
+Setup is a walkthrough, not a page of instructions. Take one stage per message, ending each with the single thing the person does next, so nothing they still need has scrolled away. If they arrived with a specific symptom rather than a fresh setup, go straight to the symptom table at the end.
 
 ## Check the session's tool list first
 
 Use a named tool only if it appears in this session's tool list. A missing tool means this session does not expose it, which can be the connection, an API Policy, or the platform version, so say "This session does not expose `<tool>`" rather than guessing at the cause. Continue only when another exposed tool preserves the meaning and safety of the request; when none does, stop and say which step is blocked.
 
-## What you need
+## Stage 0: see what is already done, then agree the stages
 
-A Frends tenant with the Platform MCP enabled, and an API token issued by a Private Application in the Frends Portal.
+Look before you ask. If the Frends tools are in this session's tool list, call `get_overview`: when it answers, the connection already works and the only thing left is stage 4. When the tools are absent, the walkthrough starts at stage 1.
 
-## Find your endpoint
+Then show the four stages and what each one produces, and let the person drop any that are already done.
 
-Your Portal address looks like `https://<your-tenant>.frendsapp.com`. The MCP endpoint is that address followed by `/mcp`.
+Done when they have seen the stages and agreed where to start.
 
-## Create a token
+## Stage 1: your endpoint
 
-In the Portal, open the admin area and create a Private Application. Grant it the MCP permissions you need, then copy the token it issues. Treat the token like a password. It belongs in your shell environment, never in a file you commit or share.
+Ask for the tenant name only, and build the address from it: a Portal at `https://<your-tenant>.frendsapp.com` has its MCP endpoint at that address followed by `/mcp`.
 
-## Set the two variables
+Done when the endpoint is written out in full and they confirm the tenant name is right.
 
-Set these in the environment your AI client will actually see. `FRENDS_MCP_URL` is your MCP endpoint and `FRENDS_MCP_TOKEN` is the token.
+## Stage 2: a token from the Portal
+
+Send them to the page before you ask for anything from it. In the Portal, open the admin area, create a Private Application, grant it the MCP permissions they need, and copy the token it issues. A token is shown once.
+
+Then ask one thing: whether they have it copied. Never ask them to paste the token into this conversation, and never repeat it back. It goes into their own shell environment and nowhere else.
+
+Done when they say the token is copied and it has not been typed into the conversation.
+
+## Stage 3: two environment variables
+
+Ask which operating system they are on, then give the one command block that fits. `FRENDS_MCP_URL` is the endpoint from stage 1, and `FRENDS_MCP_TOKEN` is the token from stage 2, pasted by them in place of the placeholder.
 
 macOS and Linux:
 
 ```bash
 export FRENDS_MCP_URL="https://<your-tenant>.frendsapp.com/mcp"
-export FRENDS_MCP_TOKEN="<your token>"
+export FRENDS_MCP_TOKEN="<paste-your-token-here>"
 ```
 
-Windows PowerShell, for the current session only:
+Windows PowerShell, for this session only:
 
 ```powershell
 $env:FRENDS_MCP_URL = "https://<your-tenant>.frendsapp.com/mcp"
-$env:FRENDS_MCP_TOKEN = "<your token>"
+$env:FRENDS_MCP_TOKEN = "<paste-your-token-here>"
 ```
 
-Windows, for future sessions as well:
+Windows, kept for future sessions:
 
 ```powershell
 setx FRENDS_MCP_URL "https://<your-tenant>.frendsapp.com/mcp"
-setx FRENDS_MCP_TOKEN "<your token>"
+setx FRENDS_MCP_TOKEN "<paste-your-token-here>"
 ```
 
-Restart the client afterwards, so it reads the new values.
+Set them in the environment the AI client itself will see, which is the shell the client starts from.
 
-## First check
+Done when both variables are set in that environment.
 
-Call `get_overview`. A working connection returns the Frends version, the Environments and the Agent Groups in the tenant, plus counts of Processes, Tasks and environment variables. Keep the Agent Group IDs it gives you, because other tools ask for them.
+## Stage 4: restart, then check
+
+Restarting the client ends this conversation, so say what happens next before they do it: the client reads the new values on startup, and the first thing to ask for afterwards is the tenant overview.
+
+After the restart, call `get_overview`. A working connection returns the Frends version, the Environments and the Agent Groups in the tenant, plus counts of Processes, Tasks and environment variables. Keep the Agent Group IDs it gives you, because other tools ask for them.
+
+Close by saying what is now working and what is still owed by hand, such as an administrator who has to enable the Platform MCP or widen an API Policy.
+
+Done when `get_overview` returns the version, the Environments and the Agent Groups.
 
 ## When it does not work
 
-Decide which of these five failures you have before choosing a fix. They have different causes, and only the 401 and 404 cases produce an HTTP status code.
+Work through the checks in this order: whether any Frends tools are there at all, then whether one specific tool is missing, then whether a call returns an error, then whether a successful call is simply empty. Only the 401 and 404 rows produce an HTTP status code.
 
-**No Frends tools appear at all, or the server never starts.** Nothing reached the tenant, so there is no status code to read. Almost always the two variables are not set in the environment the client actually sees. Set them and restart the client.
-
-**A call returns 401.** Either the token has expired, or its Private Application is not admitted by the tenant's API Policy. Both are fixed in the Portal.
-
-**A call returns 404.** The Platform MCP is not enabled on this tenant. An administrator turns it on.
-
-**A call succeeds but the list is empty.** This is a normal successful response, not an error. Either the token's permissions do not cover that resource, or the tenant genuinely has nothing that matches. Widen or drop the filter first, then check the permissions.
-
-**Most tools work, but one specific tool is missing.** This is not a broken connection and it does not mean the tenant lacks the capability. A tool appears in the session only when an API Policy targets it and the calling Private Application is granted access, and the platform version also decides which tools exist. Check the API Policy and the grant in the Portal before anything else.
-
-Do not guess between them. Check whether the tools exist at all, then whether one specific tool is missing, then whether a call errors, then whether a successful result is simply empty.
+| What you see | What it means | What fixes it |
+|---|---|---|
+| No Frends tools at all, or the server never starts | Nothing reached the tenant, so there is no status code to read | The two variables are almost certainly not set in the environment the client sees. Set them and restart the client |
+| Most tools work, one specific tool is missing | Not a broken connection, and not proof the tenant lacks that capability. A tool appears only when an API Policy targets it and the calling Private Application is granted access, and the platform version also decides which tools exist | Check the API Policy and the grant in the Portal |
+| A call returns 401 | The token has expired, or its Private Application is not admitted by the tenant's API Policy | Both are fixed in the Portal |
+| A call returns 404 | The Platform MCP is not enabled on this tenant | An administrator turns it on |
+| A call succeeds but the list is empty | A normal successful response, not an error. Either the token's permissions do not cover that resource, or the tenant has nothing matching | Widen or drop the filter first, then check the permissions |
 
 Uses (verify against the session's tool list): `get_overview`, `list_processes`, `list_guides`.
