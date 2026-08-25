@@ -1,6 +1,6 @@
 ---
 name: build-a-process
-description: Build or edit a Frends integration Process as a draft, up to a passing validation. Use when someone wants to create, scaffold, draft or change an integration, add a trigger or a Task to a Process, run a draft's Process for a test, or check that a draft compiles.
+description: Build or edit a Frends integration Process as a draft, up to a passing validation. Use when someone wants to create, scaffold, draft or change an integration, add a trigger or a Task to a Process, run a Process for a test, or check that a draft compiles.
 ---
 
 # Building a Process
@@ -81,4 +81,4 @@ Promoting is itself a deployment. `create_process_from_draft` validates and comp
 
 Your work ends at a validated draft. Done means the last `validate_process` call ran after your final change and returned zero errors; report that result, what you built, whether the draft is linked to an existing Process, and where it is. Say what you would do next, and let the user choose.
 
-Uses (verify against the session's tool list): `create_process_draft`, `list_process_drafts`, `process_add_manual_trigger`, `process_add_http_trigger`, `process_add_schedule_trigger`, `process_add_mcp_trigger`, `process_add_task`, `process_add_expression`, `process_add_decision`, `process_add_decision_branch`, `process_add_foreach`, `process_add_while`, `process_add_scope`, `process_add_catch`, `process_add_connection`, `process_edit_shape`, `process_get_structure`, `validate_process`, `list_tasks`, `inspect_task`, `start_process`. Optional: `process_batch_mutate`.
+Uses (verify against the session's tool list): `create_process_draft`, `list_process_drafts`, `process_add_manual_trigger`, `process_add_http_trigger`, `process_add_schedule_trigger`, `process_add_mcp_trigger`, `process_add_task`, `process_add_expression`, `process_add_decision`, `process_add_decision_branch`, `process_add_foreach`, `process_add_while`, `process_add_scope`, `process_add_catch`, `process_add_connection`, `process_edit_shape`, `process_get_structure`, `validate_process`, `list_tasks`, `inspect_task`, `start_process`, `create_process_from_draft`, `deploy_process`. Optional: `process_batch_mutate`.

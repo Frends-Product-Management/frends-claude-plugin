@@ -23,7 +23,7 @@ Two things follow from that shape. Drafts do not appear here, so use `list_proce
 
 For the shape of a Process rather than the whole model, `process_get_structure` gives the tree of shapes with their ids, types and outgoing connections, and `process_get_shape_config` reads one shape's full configuration. Both read drafts only.
 
-That draft-only limit has a real edge. To inspect a deployed Process with those tools, fork it into a draft safely: `create_process_draft` with the `deploymentId` and mode 'new' makes an unlinked copy that leaves the deployment alone. Forking only works when the deployment is the Process's latest version, which is the version deployed in the Development Environment; an older version running in another Agent Group cannot be opened this way, so read it with `get_process_data` instead, or go to the Portal. Anything beyond that fork, such as editing the draft or promoting it, is build work.
+That draft-only limit has a real edge. To inspect a deployed Process with those tools, fork it into a draft safely: `create_process_draft` with the `deploymentId` and mode 'new' makes an unlinked copy that leaves the deployment alone. Forking only works when the deployment is the Process's latest version, which is the version deployed in the Development Environment; an older version running in another Agent Group cannot be opened this way, so read it with `get_process_data` instead, or go to the Portal. The fork leaves a new draft in the tenant's draft list, so tell the user it exists and let them discard it in the Portal when done. Anything beyond that fork, such as editing the draft or promoting it, is build work.
 
 ## Tenant context
 

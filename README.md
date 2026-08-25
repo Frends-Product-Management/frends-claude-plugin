@@ -92,8 +92,8 @@ written for Claude clients, but the tools work the same way from Codex.
 
 ## Troubleshooting
 
-Work out which of these four failures you have before changing anything. Only the two
-middle ones produce an HTTP status code, so read the actual response first.
+Work out which of these five failures you have before changing anything. Only the 401
+and 404 cases produce an HTTP status code, so read the actual response first.
 
 **No Frends tools appear, or the server never starts.** Nothing reached the tenant, so
 there is no status code. Almost always `FRENDS_MCP_URL` and `FRENDS_MCP_TOKEN` are not set
@@ -108,6 +108,11 @@ turns it on.
 **A call succeeds but the list is empty.** That is a successful response, not an error.
 Either the token's permissions do not cover that resource, or the tenant genuinely has
 nothing matching. Widen or drop the filter first, then check the permissions.
+
+**Most tools work, but one specific tool is missing.** Not a broken connection, and not
+proof the tenant lacks the capability. A tool appears in the session only when an API
+Policy targets it and the calling Private Application is granted access, and the platform
+version also decides which tools exist. Check the API Policy and the grant in the Portal.
 
 ## Contents
 
