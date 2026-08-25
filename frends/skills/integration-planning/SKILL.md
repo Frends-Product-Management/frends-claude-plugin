@@ -39,8 +39,8 @@ Open by offering the plain-language affordance once: if anything you say does no
 
 Rules that make this work:
 
-- **Number the questions inside a topic.** Two to four per topic, written as `Q1 - <short title>: <question>` with `Suggested: <your answer>` on the line below each. A question whose answer depends on another question still open waits for the next message rather than crowding this one.
-- **Recompute after every answer.** An answer can settle a later topic or make it moot. Acknowledge that and skip it: asking a question the last answer already killed tells the person you were not listening.
+- **Number the questions inside a topic.** Two to four per topic, written as `Q1 - <short title>: <question>`, with `Suggested: <your answer>` on the line below whichever of them you have grounds to suggest an answer for. A question whose answer depends on another question still open waits for the next message rather than crowding this one.
+- **Recompute after every answer.** An answer can settle a later topic or make it moot. Acknowledge that and skip it: asking a question the last answer already killed tells the person you were not listening. Answers to a numbered batch arrive together, so one of them can moot another in the same batch. Say so when it happens and drop the answer you no longer need, rather than working with an answer to a question that stopped applying.
 - **One topic per message.** Never ask about two topics at once, however short the questions look. A wall of questions gets a wall of silence, or answers to the easy half only.
 - **Offer two or three example answers** with each question, and attach a suggested answer when you have grounds for one. Mark the suggestion as rejectable: "if you are not sure, I would start hourly, but say so and we will leave it open." Suggest only for decisions. Never substitute a suggestion for a fact you could not establish.
 - **Skip what they already told you** and acknowledge it instead. If the first sentence said "when an order is paid", the trigger topic is answered; confirm it and move on.

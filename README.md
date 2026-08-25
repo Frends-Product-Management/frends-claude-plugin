@@ -134,7 +134,7 @@ delivery.
 
 What you should see when each skill is doing its job. Every line is something you can check in your own session.
 
-**getting-connected.** You are shown the stages before you are asked to do any of them. The Portal page and the click path arrive before any question about the token, and you are never asked to paste the token into the conversation. You get one command block for your operating system, not three. `get_overview` comes back with your Frends version, Environments and Agent Groups.
+**getting-connected.** You are shown the stages before you are asked to do any of them. The Portal page and the click path arrive before any question about the token, and you are never asked to paste the token into the conversation. You are asked which operating system you are on, and get only the commands for it. `get_overview` comes back with your Frends version, Environments and Agent Groups.
 
 **find-and-inspect.** You get names, versions and Agent Groups rather than an explanation of how to look them up. Environment variables come back as names, without their values. Nothing in the tenant changed.
 
@@ -142,7 +142,7 @@ What you should see when each skill is doing its job. Every line is something yo
 
 **process-patterns.** You get two or three named shapes and the trade-off between them, tied to something you said about your own integration. No draft appears; if one does, the wrong skill fired.
 
-**integration-planning.** Questions arrive one topic at a time, numbered, each with a suggested answer you can turn down. Nothing you have already said is asked again. You hear the understanding read back in plain language before any document is written, and the plan that follows names the systems, the trigger and the failure handling in words you used.
+**integration-planning.** Questions arrive one topic at a time and numbered, and where a suggested answer comes with one, you can turn it down. Nothing you have already said is asked again. You hear the understanding read back in plain language before any document is written, and the plan that follows names the systems, the trigger and the failure handling in words you used.
 
 **build-a-process.** When the work spans several Processes you see the build order and approve it first. What is created is a draft. Validation is run and its result is shown to you rather than asserted, and nothing is promoted or deployed.
 

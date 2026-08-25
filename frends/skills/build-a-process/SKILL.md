@@ -33,7 +33,7 @@ Order the slices by what blocks what:
 
 1. Preparation comes first. A Task package that is not installed and an environment variable name that does not exist block everything that uses them.
 2. A shared building block other Processes call is always a blocker and never blocked. Build it before its callers.
-3. Inside one Process, start with a Manual Trigger so every slice can be tried, and swap in the real trigger as the last slice. That final swap removes the easy way to run it, so it belongs at the end.
+3. Inside one Process, start with a Manual Trigger so every slice can be tried, and swap in the real trigger as the last slice: add the trigger the integration needs and remove the Manual Trigger in the same slice, because a Process keeps exactly one trigger. That final swap removes the easy way to run it, so it belongs at the end.
 4. Two Processes that do not depend on each other can be built in either order. Slices inside one draft are strictly sequential: one draft is one shape graph, and two sets of changes to it interleave into a mess no tool will untangle.
 
 Every slice is verifiable by validation. A slice is only demonstrable when the user agrees to a run, so never promise a demonstration you need permission to give.

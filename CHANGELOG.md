@@ -6,7 +6,7 @@
 
 - Add the `review-a-draft` skill. It reads a built Process draft and reports what is wrong with it on two axes that are never merged: Frends conventions, and the plan the draft came from.
 
-  - The conventions axis deliberately skips anything `validate_process` already catches, so every finding is a fault that validates cleanly and fails later. It carries the faults this repository already documents across its other skills, including a JSON body sent without its header, a result read across a branch boundary, and a result read on a catch path.
+  - The conventions axis deliberately skips anything `validate_process` already catches, so every finding is a fault that validates cleanly and fails later. Most of its items collect faults the other skills already document, such as a JSON body sent without its header, a result read across a branch boundary, and a result read on a catch path; two are judgements this skill adds, for an external call left uncontained and a shape nothing in the plan asked for.
   - The plan axis quotes the plan line or handoff key behind every finding, so a person can check the finding without trusting the review's reading of the plan.
   - The axes stay separate because either can pass while the other fails: an idiomatic draft can move the wrong fields, and a draft that carries out the plan exactly can break the first time a branch is taken.
 

@@ -42,7 +42,7 @@ Skip anything `validate_process` already catches. It ran clean when you pinned t
 - **Value lost before the failure.** A value the catch path needs that was never captured into a Process variable before the risky step ran.
 - **Statement in an expression shape.** Semicolons, a `return`, or several statements where one pure C# expression belongs.
 - **HTTP Process with no answer.** A Process started by an HTTP Trigger that never reaches an HTTP result shape. The caller gets nothing back.
-- **Undefined watermark.** A scheduled Process with no definition of what "changed since the last run" means, or no answer for what happens when a run takes longer than its interval.
+- **Undefined "changed since the last run".** A scheduled Process with no definition of what counts as changed, or no answer for what happens when a run takes longer than its interval.
 - **Thin MCP surface.** An MCP Trigger whose tool name or description would not tell a calling AI client what the tool does. That text is all the caller ever sees.
 - **Classifier on an optional field.** A decision branching on a field that not every incoming record carries.
 - **Uncontained external call.** A call to another system with no scope and catch around it, so one failure ends the whole run.
@@ -67,4 +67,4 @@ The two axes catch different failures, and either can pass while the other fails
 
 You report. You do not fix the draft, and you do not promote it. Hand the findings back so the building work can carry on from them, and let the user decide what to change.
 
-Uses (verify against the session's tool list): `list_process_drafts`, `validate_process`, `process_get_structure`, `process_get_shape_config`, `get_process_data`, `inspect_task`, `create_process_draft`.
+Uses (verify against the session's tool list): `list_process_drafts`, `validate_process`, `process_get_structure`, `process_get_shape_config`, `inspect_task`, `create_process_draft`.

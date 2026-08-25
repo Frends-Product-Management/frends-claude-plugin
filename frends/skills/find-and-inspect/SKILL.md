@@ -19,7 +19,7 @@ Two things follow from that shape. Drafts do not appear here, so use `list_proce
 
 ## Read one Process
 
-`get_process_data` returns the full data model for a single Process: the BPMN, the element parameters, the process variables and the manual trigger configuration. Pass the `deploymentId` for a deployed Process or the `draftId` for a draft, but not both.
+`get_process_data` returns the full data model for a single Process: the BPMN, the element parameters, the Process variables and the manual trigger configuration. Pass the `deploymentId` for a deployed Process or the `draftId` for a draft, but not both.
 
 For the shape of a Process rather than the whole model, `process_get_structure` gives the tree of shapes with their ids, types and outgoing connections, and `process_get_shape_config` reads one shape's full configuration. Both read drafts only.
 
