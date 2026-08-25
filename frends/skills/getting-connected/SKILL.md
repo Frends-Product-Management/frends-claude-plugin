@@ -15,7 +15,7 @@ Use a named tool only if it appears in this session's tool list. A missing tool 
 
 ## Stage 0: see what is already done, then agree the stages
 
-Look before you ask. If the Frends tools are in this session's tool list, call `get_overview`: when it answers, the connection already works and the only thing left is stage 4. When the tools are absent, the walkthrough starts at stage 1.
+Look before you ask. If the Frends tools are in this session's tool list, call `get_overview`: when it answers, the connection already works. Say so, hand over the Frends version, the Environments and the Agent Group IDs, and stop. There is nothing to set up and no reason to restart anything. When the tools are absent, or the call fails, the walkthrough starts at stage 1.
 
 Then show the four stages and what each one produces, and let the person drop any that are already done.
 

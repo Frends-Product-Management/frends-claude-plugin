@@ -4,7 +4,7 @@ The building skill produces a Process draft and stops at a passing validation. P
 
 ## Why this is out of scope
 
-These actions change what a customer's integration platform does in production, and several of them are hard to walk back: promotion is itself a deployment, and activating a trigger makes an endpoint or a schedule live immediately. An AI client working from an interview transcript does not hold enough context to carry that risk, and the person who does hold it should be the one who acts.
+These actions change what a customer's integration platform does, and several of them are hard to walk back. Promotion is itself a deployment: it puts a new version on the development Agent Group without a second confirmation. Deploying to another Agent Group reaches the Environments a business actually runs on, and activating a trigger makes an endpoint or a schedule live immediately. An AI client working from an interview transcript does not hold enough context to carry that risk, and the person who does hold it should be the one who acts.
 
 Keeping a person in the loop for these steps is also what makes the plugin's behaviour explainable after the fact: every change to a live Environment traces to someone who approved it.
 

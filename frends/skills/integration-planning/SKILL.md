@@ -73,7 +73,9 @@ Check coverage before writing. If more than half of the ten headings would read 
 
 ## When the interview is done
 
-The interview is done when a builder could work from the plan without coming back to this person. Judge it that way rather than by counting topics covered: a topic can be covered and still leave the builder guessing. An open question with a named owner counts as settled by delegation, not as a gap, which is what lets the interview end while an unknown remains.
+The interview is done when a builder could work from the plan without coming back to this person. Judge it that way rather than by counting topics covered: a topic can be covered and still leave the builder guessing.
+
+An open question with a named owner counts as settled by delegation only when the build can start without its answer. Mark every open question as blocking or not: a blocking question means the plan is not ready to build, however complete it looks, and the plan should say which Process is waiting on which answer. That is the difference between an interview that has finished and a plan that can be handed over.
 
 ## Read it back before you write it
 

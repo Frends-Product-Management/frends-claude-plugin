@@ -134,7 +134,7 @@ delivery.
 
 What you should see when each skill is doing its job. Every line is something you can check in your own session.
 
-**getting-connected.** You are shown the stages before you are asked to do any of them. The Portal page and the click path arrive before any question about the token, and you are never asked to paste the token into the conversation. You are asked which operating system you are on, and get only the commands for it. `get_overview` comes back with your Frends version, Environments and Agent Groups.
+**getting-connected.** If you are already connected, you are told so and handed your Environments and Agent Group IDs, rather than walked through a setup you do not need. Otherwise you are shown the stages before you are asked to do any of them. The Portal page and the click path arrive before any question about the token, and you are never asked to paste the token into the conversation. You are asked which operating system you are on, and get only the commands for it. `get_overview` comes back with your Frends version, Environments and Agent Groups.
 
 **find-and-inspect.** You get names, versions and Agent Groups rather than an explanation of how to look them up. Environment variables come back as names, without their values. Nothing in the tenant changed.
 
@@ -146,7 +146,7 @@ What you should see when each skill is doing its job. Every line is something yo
 
 **build-a-process.** When the work spans several Processes you see the build order and approve it first. What is created is a draft. Validation is run and its result is shown to you rather than asserted, and nothing is promoted or deployed.
 
-**review-a-draft.** Findings arrive under two separate headings and are never merged into one ranked list. Every finding on the plan axis quotes the plan line behind it. Nothing in the draft is changed by the review.
+**review-a-draft.** Findings arrive under two separate headings and are never merged into one ranked list. Every finding on the plan axis quotes the plan line behind it. Anything a run would have to settle is listed as not verified rather than counted as passed. Nothing in the draft is changed by the review.
 
 ## For maintainers
 

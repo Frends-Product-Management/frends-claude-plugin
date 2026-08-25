@@ -1,6 +1,6 @@
 ---
 name: review-a-draft
-description: Review a built Frends Process draft against the plan it came from and against Frends conventions, before anyone promotes it. Use when a draft is finished and someone asks whether it is right, complete, or ready to promote. Do not use to build or change a draft, to promote one, or to investigate a Process that is already failing in an Environment.
+description: Read a built Frends Process draft and report what is wrong with it, against the plan it came from and against Frends conventions, before anyone promotes it. Use when a draft is finished and someone asks whether it is right or complete, or wants it checked before promoting. Do not use to build or change a draft, to promote one, or to investigate a Process that is already failing in an Environment.
 ---
 
 # Reviewing a Process draft
@@ -15,7 +15,7 @@ Use a named tool only if it appears in this session's tool list. A missing tool 
 
 Find the draft with `list_process_drafts` and run `validate_process` on it once, here. A draft that does not validate is not ready for review: hand it back for building, because the errors validation reports are the work that comes first. Reviewing an invalid draft spends the whole review on findings the builder would have seen anyway.
 
-To review a Process that is already deployed, fork it into a draft first: `create_process_draft` with the `deploymentId` and mode 'new' makes an unlinked copy that leaves the deployment alone. Tell the user the fork exists so they can discard it in the Portal afterwards.
+To review a Process that is already deployed, fork it into a draft first: `create_process_draft` with the `deploymentId` and mode 'new' makes an unlinked copy that leaves the deployment alone. Tell the user the fork exists so they can discard it in the Portal afterwards. Forking only works when that deployment is the Process's latest version, which is the version deployed in the Development Environment. For an older version running elsewhere, read it with `get_process_data` instead and say that the review is working from the data model rather than from the shape tools, or send the user to the Portal.
 
 Then read the draft once: `process_get_structure` for the shapes and their connections, `process_get_shape_config` for the configuration of each shape that matters. Work from that reading rather than fetching the same shape twice.
 
@@ -57,9 +57,15 @@ Report three things, and quote the plan line or the handoff key behind every one
 - **More than was asked.** A shape doing something the plan put out of scope, a Process that is not in the plan's process list, a trigger of a different type than the plan named, or a Task doing work the plan gave to a different Process. Worst of this kind: the draft was already promoted or deployed. Promotion is a deployment and it belongs to the user, so if it has already happened, lead with that.
 - **There but wrong.** A field mapped to the wrong target, a transformation the mapping table does not describe, an error policy that does something other than what section 6 says.
 
+## Say what the reading cannot reach
+
+This review reads a draft. It does not run one, so anything that only shows up in a run is outside what the reading can settle: whether the other system accepts what is sent, whether a mapping produces the value someone expects, whether a run finishes inside its window.
+
+List those separately as not verified, and name what would settle each one. The plan's acceptance criteria are the source: any criterion that needs a run goes on this list rather than being treated as met. A review with no findings means nothing was found in what could be read, never that the draft is proven to work.
+
 ## Report
 
-Give the two axes their own headings and leave them separate. End with the count of findings on each axis and the worst one on each. Do not pick an overall winner: that ranking is exactly what keeping the axes apart is meant to prevent.
+Give the two axes their own headings and leave them separate, and keep the not-verified list with them. End with the count of findings on each axis, the worst one on each, and the count of acceptance criteria a run would still have to settle. Do not pick an overall winner: that ranking is exactly what keeping the axes apart is meant to prevent.
 
 The two axes catch different failures, and either can pass while the other fails. A draft can be perfectly idiomatic Frends and sync the wrong fields. A draft can carry out the plan exactly and read a result across a branch boundary, so it breaks the first time that branch is taken. A clean validation makes both feel finished, which is why the reading is split in two.
 
@@ -67,4 +73,4 @@ The two axes catch different failures, and either can pass while the other fails
 
 You report. You do not fix the draft, and you do not promote it. Hand the findings back so the building work can carry on from them, and let the user decide what to change.
 
-Uses (verify against the session's tool list): `list_process_drafts`, `validate_process`, `process_get_structure`, `process_get_shape_config`, `inspect_task`, `create_process_draft`.
+Uses (verify against the session's tool list): `list_process_drafts`, `validate_process`, `process_get_structure`, `process_get_shape_config`, `inspect_task`, `create_process_draft`, `get_process_data`.

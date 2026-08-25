@@ -35,6 +35,15 @@
 
 ### Patch Changes
 
+- Corrections found in review of this release, before it shipped:
+
+  - `review-a-draft` now separates what reading a draft cannot settle. Anything that only appears in a run, including any acceptance criterion that needs one, is listed as not verified with what would settle it. A review with no findings said nothing about whether the draft works, and now says so.
+  - `integration-planning` now marks each open question as blocking or not. A question with a named owner only counts as settled by delegation when the build can start without its answer; otherwise a plan could read as finished and still be unbuildable.
+  - `build-a-process` no longer suggests a Manual Trigger makes each slice runnable. A draft cannot be run at all: the Manual Trigger is there because it leaves the Process inert while it is built, and because adding a live trigger early makes an endpoint or a schedule real as soon as the Process is deployed.
+  - `getting-connected` now stops when it finds a working connection, instead of sending someone through a client restart they do not need.
+  - `review-a-draft` now carries the limits on forking a deployed Process, and the fallback for a version that cannot be forked.
+  - `.out-of-scope/no-autonomous-deployment.md` now says promotion deploys to the development Agent Group rather than to production, which is what the platform actually does.
+
 - Add `.out-of-scope/`, recording four decisions so each is made once and linked afterwards: no bundled setup executables, no credentials in files, no autonomous deployment, and no skill per Task or connected system.
 
 - Remove every em-dash from the skills, the README and both manifests, replacing them with colons and semicolons.
