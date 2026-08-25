@@ -1,7 +1,7 @@
 # Frends Platform MCP plugin
 
 Work with your Frends tenant from Claude and Codex: find and inspect Processes, diagnose
-failed runs, and build integrations. The plugin bundles the tenant connector plus six
+failed runs, and build integrations. The plugin bundles the tenant connector plus seven
 skills that teach the AI client how to use the Frends Platform MCP properly.
 
 ## Prerequisites
@@ -48,7 +48,7 @@ Restart Claude Code so it reads the new values, then ask it to call `get_overvie
 Open plugin settings, add `Frends-Product-Management/frends-claude-plugin` as a marketplace, then
 install the `frends` plugin from it.
 
-On claude.ai and Claude Desktop the plugin installs and its skills work; the live tenant connector currently requires Claude Code or Codex — web and Desktop connector support arrives with Frends' OAuth-based remote MCP.
+On claude.ai and Claude Desktop the plugin installs and its skills work; the live tenant connector currently requires Claude Code or Codex; web and Desktop connector support arrives with Frends' OAuth-based remote MCP.
 
 ## Use with Codex CLI
 
@@ -122,12 +122,31 @@ version also decides which tools exist. Check the API Policy and the grant in th
 | `find-and-inspect` | Finding Processes and explaining how one is built |
 | `diagnose-failures` | Investigating failed runs, read-only |
 | `build-a-process` | Building a draft up to a passing validation |
+| `review-a-draft` | Checking a finished draft against the plan and against Frends conventions |
 | `process-patterns` | Choosing the right Process shape before building |
 | `integration-planning` | Interviewing for requirements, or synthesizing an earlier conversation, and writing the integration plan before any building |
 
 Plans written by `integration-planning` are aligned with the Frends Integration
 Requirements Document (FIRD), the format used to specify a Frends integration for
 delivery.
+
+## Is it working?
+
+What you should see when each skill is doing its job. Every line is something you can check in your own session.
+
+**getting-connected.** You are shown the stages before you are asked to do any of them. The Portal page and the click path arrive before any question about the token, and you are never asked to paste the token into the conversation. You get one command block for your operating system, not three. `get_overview` comes back with your Frends version, Environments and Agent Groups.
+
+**find-and-inspect.** You get names, versions and Agent Groups rather than an explanation of how to look them up. Environment variables come back as names, without their values. Nothing in the tenant changed.
+
+**diagnose-failures.** You are shown three to five possible causes, ranked, before anything is tested. The reasoning points at a specific run you can open yourself. Where the evidence stops, you are told what is unproven instead of given a guess. Nothing was retried or repaired.
+
+**process-patterns.** You get two or three named shapes and the trade-off between them, tied to something you said about your own integration. No draft appears; if one does, the wrong skill fired.
+
+**integration-planning.** Questions arrive one topic at a time, numbered, each with a suggested answer you can turn down. Nothing you have already said is asked again. You hear the understanding read back in plain language before any document is written, and the plan that follows names the systems, the trigger and the failure handling in words you used.
+
+**build-a-process.** When the work spans several Processes you see the build order and approve it first. What is created is a draft. Validation is run and its result is shown to you rather than asserted, and nothing is promoted or deployed.
+
+**review-a-draft.** Findings arrive under two separate headings and are never merged into one ranked list. Every finding on the plan axis quotes the plan line behind it. Nothing in the draft is changed by the review.
 
 ## For maintainers
 
@@ -137,7 +156,22 @@ reach anyone who already installed it.
 
 Before a release, keep this README's skill count and Contents table in sync with
 `frends/skills/`, and keep the "Check the session's tool list first" paragraph
-byte-identical across the skills that carry it.
+byte-identical across the skills that carry it. That paragraph is deliberately
+duplicated rather than shared: a skill body loads on its own, so a guard kept
+anywhere else would not be there when the skill runs.
+
+Every behavioural change gets an entry in [CHANGELOG.md](CHANGELOG.md), including a
+change to a skill's `description`. The description is what decides whether a skill is
+chosen at all, so editing it changes behaviour as surely as editing the body does.
+
+Rejected ideas are recorded in [.out-of-scope/](.out-of-scope/) so each decision is made
+once. Before answering a feature request, read those files: the answer may already be
+written, and if the reasoning has expired the file says what would have to change.
+
+[docs/eval-prompts.md](docs/eval-prompts.md) lists the prompts each skill should and
+should not answer. Run through it by hand before a release: the descriptions are the only
+thing an AI client sees when choosing a skill, so a description change is a routing
+change.
 
 ## Acknowledgments
 

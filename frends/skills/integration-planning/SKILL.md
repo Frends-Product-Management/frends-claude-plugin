@@ -51,23 +51,23 @@ Rules that make this work:
 
 ### What to ask about in each topic
 
-**Source system** — which system holds the data, how you reach it (an API, a database, a file location, a queue), and how one record is identified. If files: where they appear, the filename pattern, and what happens to a file once it is handled.
+**Source system**: which system holds the data, how you reach it (an API, a database, a file location, a queue), and how one record is identified. If files: where they appear, the filename pattern, and what happens to a file once it is handled.
 
-**Target system** — which system receives the result, through which interface, and whether the operation creates, updates, or replaces. Ask what should happen when the record already exists there.
+**Target system**: which system receives the result, through which interface, and whether the operation creates, updates, or replaces. Ask what should happen when the record already exists there.
 
-**Trigger** — what starts a run: a schedule, an incoming call, a file or message arriving, or a person pressing a button. If something arrives, ask how the integration learns about it, and how often it should look.
+**Trigger**: what starts a run: a schedule, an incoming call, a file or message arriving, or a person pressing a button. If something arrives, ask how the integration learns about it, and how often it should look.
 
-**Data mapping** — which fields move, field by field, and which ones need reshaping rather than copying: formats, units, date and number formats, derived values, and codes that differ between the two systems. Ask which values are calculated rather than read. If several sources are combined, ask how records from each are matched to each other.
+**Data mapping**: which fields move, field by field, and which ones need reshaping rather than copying: formats, units, date and number formats, derived values, and codes that differ between the two systems. Ask which values are calculated rather than read. If several sources are combined, ask how records from each are matched to each other.
 
-**Error handling** — what counts as a failure worth stopping for, versus a bad record worth skipping and reporting. Ask whether a failed step should be retried and how many times, who must be told and through which channel, and whether one bad record should stop the whole run. Ask two or three of these as stories rather than as questions about design: the same record arrives twice, the target system is down for four hours, one record is missing a field it needs. A person who cannot answer "what is your idempotency requirement" answers "what should happen if the same order arrives twice" immediately, and that answer is the requirement.
+**Error handling**: what counts as a failure worth stopping for, versus a bad record worth skipping and reporting. Ask whether a failed step should be retried and how many times, who must be told and through which channel, and whether one bad record should stop the whole run. Ask two or three of these as stories rather than as questions about design: the same record arrives twice, the target system is down for four hours, one record is missing a field it needs. A person who cannot answer "what is your idempotency requirement" answers "what should happen if the same order arrives twice" immediately, and that answer is the requirement.
 
-**Volume and schedule** — how many records per run and per day, expected peak, how long one run may take, whether two runs may overlap, and whether the source needs paging when a run is large.
+**Volume and schedule**: how many records per run and per day, expected peak, how long one run may take, whether two runs may overlap, and whether the source needs paging when a run is large.
 
-**Auth and secrets** — how each side authenticates, which credentials are needed by name, and where they are stored. Never ask anyone to paste a secret into the conversation. Record the NAME of each credential and nothing else.
+**Auth and secrets**: how each side authenticates, which credentials are needed by name, and where they are stored. Never ask anyone to paste a secret into the conversation. Record the NAME of each credential and nothing else.
 
 ## Turning an existing conversation into the plan
 
-When the answers already exist in the conversation, do not re-interview. Synthesize the plan from what was actually said, and write `Not established — see Open questions` for everything that was not. Every filled section must be traceable to something the person actually said; do not complete a pattern because it sounds likely.
+When the answers already exist in the conversation, do not re-interview. Synthesize the plan from what was actually said, and write `Not established, see Open questions` for everything that was not. Every filled section must be traceable to something the person actually said; do not complete a pattern because it sounds likely.
 
 Check coverage before writing. If more than half of the ten headings would read "Not established", the conversation is too thin for a plan: say so, and offer a short interview on just the gaps instead of producing a hollow document.
 
@@ -81,7 +81,7 @@ Before the formal plan, read your understanding back in plain language: a few se
 
 ## Write the plan
 
-When the topics are done, write the plan using **exactly these ten headings**, in this order, every time. Always emit all ten. Where something is genuinely unknown, write `Not established — see Open questions` under that heading rather than deleting it. The same shape every time is what makes these plans comparable and reviewable.
+When the topics are done, write the plan using **exactly these ten headings**, in this order, every time. Always emit all ten. Where something is genuinely unknown, write `Not established, see Open questions` under that heading rather than deleting it. The same shape every time is what makes these plans comparable and reviewable.
 
 ```markdown
 ## 1. Overview
@@ -96,7 +96,7 @@ When the topics are done, write the plan using **exactly these ten headings**, i
 ## 10. Build handoff
 ```
 
-Guidance per section: keep **1. Overview** to a few sentences a stakeholder can read — what moves, from where to where, and why. Add two short lists there: what is out of scope (one or two lines; naming what this integration deliberately does not do stops the build from growing it), and acceptance criteria (two or three checks that would show the integration works, each verifiable by a person). If any part of the integration should be a shared building block other integrations call, say so here in one sentence. Put the field-by-field mapping in **5** as a table with source field, target field, and transformation; that table is the section builders will use most. Keep **9. Open questions** honest and specific, each phrased so it can be answered by one person in one sentence, and name that person or role. List credentials in **8** by name only.
+Guidance per section: keep **1. Overview** to a few sentences a stakeholder can read: what moves, from where to where, and why. Add two short lists there: what is out of scope (one or two lines; naming what this integration deliberately does not do stops the build from growing it), and acceptance criteria (two or three checks that would show the integration works, each verifiable by a person). If any part of the integration should be a shared building block other integrations call, say so here in one sentence. Put the field-by-field mapping in **5** as a table with source field, target field, and transformation; that table is the section builders will use most. Keep **9. Open questions** honest and specific, each phrased so it can be answered by one person in one sentence, and name that person or role. List credentials in **8** by name only.
 
 The plan is aligned with the Frends Integration Requirements Document (FIRD), the format a Frends integration is specified in for delivery, so a delivery team can pick the plan up without translation. One plan describes one integration need, but the build may implement it as one Process or several: split when parts start from different triggers or schedules, when a part is a shared building block other integrations call, or when one Process would be too large to read and validate. The build handoff names every Process the plan implies.
 
@@ -156,7 +156,7 @@ open_questions:
 
 `processes` is a list on purpose: when the plan splits the work, add one entry per Process, each with its own trigger and steps, and use `depends_on` to name which Processes must exist first.
 
-Four keys carry the weight a builder needs and a reviewer checks against. `mode` decides whether this becomes a brand-new Process or a new version of one that exists, which is the choice a builder cannot recover from once a draft is promoted, so state it rather than leaving it to the name. `existing_process` and `current_behavior` give a builder editing something live a baseline to preserve and a reviewer a way to tell an improvement from an accident. `acceptance_criteria` are per Process and each one is something a person can check on its own; whole-integration criteria in section 1 cannot tell a builder when the second of three Processes is done. `out_of_scope` per Process is the fence that stops a build growing past what was agreed. Name Processes, never identifiers: a draft id dies at promotion and a deployment id points at a version that moves. Treat these keys as a working shape rather than a fixed contract: they are chosen to carry what a build step needs, and they may be adjusted as the receiving side firms up. Keep the keys stable within a plan, and never put a secret VALUE in `credentials_needed` — names only.
+Four keys carry the weight a builder needs and a reviewer checks against. `mode` decides whether this becomes a brand-new Process or a new version of one that exists, which is the choice a builder cannot recover from once a draft is promoted, so state it rather than leaving it to the name. `existing_process` and `current_behavior` give a builder editing something live a baseline to preserve and a reviewer a way to tell an improvement from an accident. `acceptance_criteria` are per Process and each one is something a person can check on its own; whole-integration criteria in section 1 cannot tell a builder when the second of three Processes is done. `out_of_scope` per Process is the fence that stops a build growing past what was agreed. Name Processes, never identifiers: a draft id dies at promotion and a deployment id points at a version that moves. Treat these keys as a working shape rather than a fixed contract: they are chosen to carry what a build step needs, and they may be adjusted as the receiving side firms up. Keep the keys stable within a plan, and never put a secret VALUE in `credentials_needed`; names only.
 
 Do not start building, and do not let a build step start, until the user has confirmed the plan; record that in `confirmation_status`.
 
@@ -172,7 +172,7 @@ When the filled questionnaire comes back, take it the same way as any other conv
 
 ## Staying useful across tools
 
-This skill keeps product knowledge out of the interview: no Task names, no platform-specific field names in the questions. Two Frends-specific things are deliberate: when a tenant is connected the skill may look facts up there, and the written plan is FIRD-aligned. The build step supplies the rest when the plan is handed over — in a Frends context, that is where Task and Task package knowledge lives, not here.
+This skill keeps product knowledge out of the interview: no Task names, no platform-specific field names in the questions. Two Frends-specific things are deliberate: when a tenant is connected the skill may look facts up there, and the written plan is FIRD-aligned. The build step supplies the rest when the plan is handed over; in a Frends context, that is where Task and Task package knowledge lives, not here.
 
 The file is a plain instruction document. It loads automatically as a skill in Claude Code and Claude Desktop, and the same text can be pasted or attached as context in another AI client with no change.
 

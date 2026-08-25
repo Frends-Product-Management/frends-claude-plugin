@@ -1,0 +1,78 @@
+# frends
+
+## 0.5.0
+
+### Minor Changes
+
+- Add the `review-a-draft` skill. It reads a built Process draft and reports what is wrong with it on two axes that are never merged: Frends conventions, and the plan the draft came from.
+
+  - The conventions axis deliberately skips anything `validate_process` already catches, so every finding is a fault that validates cleanly and fails later. It carries the faults this repository already documents across its other skills, including a JSON body sent without its header, a result read across a branch boundary, and a result read on a catch path.
+  - The plan axis quotes the plan line or handoff key behind every finding, so a person can check the finding without trusting the review's reading of the plan.
+  - The axes stay separate because either can pass while the other fails: an idiomatic draft can move the wrong fields, and a draft that carries out the plan exactly can break the first time a branch is taken.
+
+- `getting-connected`: rebuild setup as a staged walkthrough, one stage per message, and stop asking for the token.
+
+  - The Portal page and its click path now arrive before the question about the token, and the question is only whether it has been copied. The token's value never enters the conversation.
+  - The operating system is asked before a command block is shown, instead of showing three blocks to everyone.
+  - The five failure cases become a table ordered by the checks to run, so someone arriving with a symptom can enter there rather than reading the setup first.
+
+- `integration-planning`: number the questions inside a topic, each with a suggested answer, and let a question that depends on an unanswered one wait for the next message. Topics stay one per message.
+
+  - The error-handling topic now asks two or three of its questions as stories, because a person who cannot answer a question about idempotency answers "what should happen if the same order arrives twice" immediately, and that answer is the requirement.
+  - A rejected suggestion is recorded with the reason, so the next reader does not propose it again and make the customer explain twice.
+  - The skill can now write a questionnaire for a question only an absent colleague can answer, one per owner, and take the filled questionnaire back as input to the plan.
+  - The build handoff gains `mode`, `existing_process`, `current_behavior`, per-Process `acceptance_criteria` and per-Process `out_of_scope`. Whole-integration acceptance criteria could not tell a builder when the second of three Processes was done, and nothing recorded whether a Process was new or a new version of an existing one, which is the choice that cannot be undone after promotion.
+  - The interview is now finished when a builder could work from the plan without coming back to the person, rather than when seven topics have been covered.
+
+- `build-a-process`: plan the build order before building when the plan names several Processes.
+
+  - A slice is one path from trigger to outcome ending at a clean validation, never a layer applied across the whole Process.
+  - Preparation and shared building blocks are always blockers; a Manual Trigger comes first so each slice can be tried, and the real trigger is swapped in last.
+  - Changing what a shared building block expects from its callers is handled in three stages instead of one edit, because every caller breaks at once otherwise.
+  - The skill now offers a review of the finished draft against its plan, since validation proves only that the draft compiles.
+
+- `diagnose-failures`: name three to five possible causes and rank them before testing any of them, and show the ranking to the user, who often re-ranks it in one sentence. The first plausible explanation is the one you will find evidence for if you go looking for it alone.
+
+### Patch Changes
+
+- Add `.out-of-scope/`, recording four decisions so each is made once and linked afterwards: no bundled setup executables, no credentials in files, no autonomous deployment, and no skill per Task or connected system.
+
+- Remove every em-dash from the skills, the README and both manifests, replacing them with colons and semicolons.
+
+## 0.4.0
+
+### Minor Changes
+
+- Add the `process-patterns` skill: six common Process shapes with when each fits, the trigger tool each needs, and the mistake each usually attracts.
+
+- Every skill that calls tools now starts from the session's tool list rather than a hand-maintained list of tool names. A missing tool is reported as something this session does not expose, which is a different claim from the tenant lacking the capability, and building stops rather than degrades when `validate_process` is absent.
+
+- `build-a-process`: carry the platform behaviour that validation cannot catch, including the four ways a draft can start, promotion being a deployment to the development Agent Group, reading a failure through `#var.error`, the silent Content-Type failure, and triggers activating by default on deployment.
+
+- `integration-planning`: challenge a vague answer within the existing follow-up budget, offer rejectable suggestions for decisions only, look facts up in the tenant instead of asking, read the understanding back in plain language before writing, and synthesize a plan from a conversation that already happened. Plans are aligned with the Frends Integration Requirements Document.
+
+### Patch Changes
+
+- `getting-connected`: add the fifth failure case, where most tools work and one specific tool is missing because an API Policy does not target it.
+
+- `find-and-inspect`: frame the draft fork as a way to inspect safely, name the leftover draft it creates, and show environment variable names without their values.
+
+- README: correct the skill count, document the Codex path honestly (registering the server does not install the skills), and acknowledge the skills repository the interview patterns were adapted from.
+
+## 0.3.0
+
+### Minor Changes
+
+- `integration-planning`: ask once whether a step should be built as a shared building block other integrations call, since a plan that assumes every step is built fresh overstates the work.
+
+## 0.2.0
+
+### Minor Changes
+
+- Add the `integration-planning` skill: interview one topic at a time across seven topics, then write a plan with a fixed set of headings and a structured handoff a build step can read.
+
+## 0.1.0
+
+### Minor Changes
+
+- First release: the tenant connector plus four skills for getting connected, finding and inspecting Processes, diagnosing failed runs, and building a draft up to a passing validation.
