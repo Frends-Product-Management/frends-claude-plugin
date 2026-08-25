@@ -1,7 +1,7 @@
 # Frends Platform MCP plugin
 
 Work with your Frends tenant from Claude and Codex: find and inspect Processes, diagnose
-failed runs, and build integrations. The plugin bundles the tenant connector plus four
+failed runs, and build integrations. The plugin bundles the tenant connector plus six
 skills that teach the AI client how to use the Frends Platform MCP properly.
 
 ## Prerequisites
@@ -52,8 +52,8 @@ On claude.ai and Claude Desktop the plugin installs and its skills work; the liv
 
 ## Use with Codex CLI
 
-Codex does not read this plugin's connector file. It consumes the Frends Platform MCP
-directly, so register the server once:
+This plugin's connector file is read by Claude clients. For Codex, register the Frends
+Platform MCP server directly:
 
 ```bash
 codex mcp add frends --url "https://<your-tenant>.frendsapp.com/mcp" \
@@ -69,7 +69,12 @@ url = "https://<your-tenant>.frendsapp.com/mcp"
 bearer_token_env_var = "FRENDS_MCP_TOKEN"
 ```
 
-`integration-planning` is the one skill here that needs no tenant connection: it interviews and writes a plan, so the same file also works pasted or attached as a plain instruction document in an AI client this repository does not package for. No install path outside Claude Code, Claude Desktop and Codex is claimed or tested.
+Registering the server does not install the skills: `codex mcp add` configures the MCP
+connection only. To use the skills from Codex, copy the folders under `frends/skills/`
+into a Codex skill discovery location, such as your repository's or your user
+`.agents/skills/` directory. No other Codex install path is claimed or tested.
+
+`integration-planning` needs no tenant connection: it interviews and writes a plan, so the same file also works pasted or attached as a plain instruction document in an AI client this repository does not package for.
 
 Set `FRENDS_MCP_TOKEN` in your shell as shown above. The skills in this repository are
 written for Claude clients, but the tools work the same way from Codex.
@@ -81,7 +86,9 @@ written for Claude clients, but the tools work the same way from Codex.
 - Why did this integration start failing yesterday?
 - Which Tasks are available in our tenant, and what parameters does this one take?
 - Build me a draft that reads from an endpoint and writes the result somewhere.
+- What kind of Process should a nightly sync to our ERP be?
 - I want to connect our webshop to our ERP; ask me what you need and write the plan.
+- Turn what we just discussed into an integration plan.
 
 ## Troubleshooting
 
@@ -110,13 +117,28 @@ nothing matching. Widen or drop the filter first, then check the permissions.
 | `find-and-inspect` | Finding Processes and explaining how one is built |
 | `diagnose-failures` | Investigating failed runs, read-only |
 | `build-a-process` | Building a draft up to a passing validation |
-| `integration-planning` | Interviewing for requirements and writing the integration plan, before any building |
+| `process-patterns` | Choosing the right Process shape before building |
+| `integration-planning` | Interviewing for requirements, or synthesizing an earlier conversation, and writing the integration plan before any building |
+
+Plans written by `integration-planning` are aligned with the Frends Integration
+Requirements Document (FIRD), the format used to specify a Frends integration for
+delivery.
 
 ## For maintainers
 
 Every content change must bump `version` in `frends/.claude-plugin/plugin.json`. Claude
 clients cache installed plugins by version, so a change shipped without a bump will not
 reach anyone who already installed it.
+
+Before a release, keep this README's skill count and Contents table in sync with
+`frends/skills/`, and keep the "Check the session's tool list first" paragraph
+byte-identical across the skills that carry it.
+
+## Acknowledgments
+
+The interview and plan-synthesis discipline in `integration-planning` adapts patterns
+from Matt Pocock's MIT-licensed skills repository
+(https://github.com/mattpocock/skills).
 
 ## License
 

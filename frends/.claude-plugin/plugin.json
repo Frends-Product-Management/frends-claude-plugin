@@ -1,6 +1,6 @@
 {
   "name": "frends",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Work with your Frends tenant — find and inspect Processes, diagnose failures, and build integrations — through the Frends Platform MCP.",
   "author": {
     "name": "Frends"
