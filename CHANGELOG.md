@@ -45,6 +45,7 @@
   - `.out-of-scope/no-autonomous-deployment.md` now says promotion deploys to the development Agent Group rather than to production, which is what the platform actually does.
   - The conventions list dropped its orphan-shape item after a check against the platform's own validation, which already reports a shape with no incoming connection. The list is for faults validation stays silent on, so an item validation catches does not belong on it.
   - The trigger item now says what is actually true: a second Manual Trigger is refused when you add it, and other trigger combinations are not, which is the case worth reviewing for.
+  - The scope-creep item about work that was already promoted now accounts for promotion consuming the draft, so the reviewer meets it as a draft that has left the draft list rather than as a promoted draft still sitting there.
   - `getting-connected` asks Windows users whether they want the values kept for later, since the operating system alone does not choose between a session variable and a stored one, and it no longer claims a token is shown only once.
 
 - Add `.out-of-scope/`, recording four decisions so each is made once and linked afterwards: no bundled setup executables, no credentials in files, no autonomous deployment, and no skill per Task or connected system.
