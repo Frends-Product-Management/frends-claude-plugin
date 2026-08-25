@@ -43,6 +43,9 @@
   - `getting-connected` now stops when it finds a working connection, instead of sending someone through a client restart they do not need.
   - `review-a-draft` now carries the limits on forking a deployed Process, and the fallback for a version that cannot be forked.
   - `.out-of-scope/no-autonomous-deployment.md` now says promotion deploys to the development Agent Group rather than to production, which is what the platform actually does.
+  - The conventions list dropped its orphan-shape item after a check against the platform's own validation, which already reports a shape with no incoming connection. The list is for faults validation stays silent on, so an item validation catches does not belong on it.
+  - The trigger item now says what is actually true: a second Manual Trigger is refused when you add it, and other trigger combinations are not, which is the case worth reviewing for.
+  - `getting-connected` asks Windows users whether they want the values kept for later, since the operating system alone does not choose between a session variable and a stored one, and it no longer claims a token is shown only once.
 
 - Add `.out-of-scope/`, recording four decisions so each is made once and linked afterwards: no bundled setup executables, no credentials in files, no autonomous deployment, and no skill per Task or connected system.
 

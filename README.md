@@ -134,7 +134,7 @@ delivery.
 
 What you should see when each skill is doing its job. Every line is something you can check in your own session.
 
-**getting-connected.** If you are already connected, you are told so and handed your Environments and Agent Group IDs, rather than walked through a setup you do not need. Otherwise you are shown the stages before you are asked to do any of them. The Portal page and the click path arrive before any question about the token, and you are never asked to paste the token into the conversation. You are asked which operating system you are on, and get only the commands for it. `get_overview` comes back with your Frends version, Environments and Agent Groups.
+**getting-connected.** If you are already connected, you are told so and handed your Environments and Agent Group IDs, rather than walked through a setup you do not need. Otherwise you are shown the stages before you are asked to do any of them. The Portal page and the click path arrive before any question about the token, and you are never asked to paste the token into the conversation. You are asked which operating system you are on, and get only the commands for it, rather than every platform's at once. `get_overview` comes back with your Frends version, Environments and Agent Groups.
 
 **find-and-inspect.** You get names, versions and Agent Groups rather than an explanation of how to look them up. Environment variables come back as names, without their values. Nothing in the tenant changed.
 

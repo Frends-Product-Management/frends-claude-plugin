@@ -29,7 +29,7 @@ Done when the endpoint is written out in full and they confirm the tenant name i
 
 ## Stage 2: a token from the Portal
 
-Send them to the page before you ask for anything from it. In the Portal, open the admin area, create a Private Application, grant it the MCP permissions they need, and copy the token it issues. A token is shown once.
+Send them to the page before you ask for anything from it. In the Portal, open the admin area, create a Private Application, grant it the MCP permissions they need, and copy the token it issues.
 
 Then ask one thing: whether they have it copied. Never ask them to paste the token into this conversation, and never repeat it back. It goes into their own shell environment and nowhere else.
 
@@ -37,7 +37,7 @@ Done when they say the token is copied and it has not been typed into the conver
 
 ## Stage 3: two environment variables
 
-Ask which operating system they are on, then give the one command block that fits. `FRENDS_MCP_URL` is the endpoint from stage 1, and `FRENDS_MCP_TOKEN` is the token from stage 2, pasted by them in place of the placeholder.
+Ask which operating system they are on, and on Windows whether they want the values for this session only or kept for later, then give the one command block that fits. `FRENDS_MCP_URL` is the endpoint from stage 1, and `FRENDS_MCP_TOKEN` is the token from stage 2, pasted by them in place of the placeholder.
 
 macOS and Linux:
 

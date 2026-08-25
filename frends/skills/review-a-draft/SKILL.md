@@ -33,8 +33,7 @@ Work the two axes separately and report them separately. Never merge the finding
 
 Skip anything `validate_process` already catches. It ran clean when you pinned the draft, so everything here is a fault validation cannot see. Each of these is a judgement call, not a rule: name what you see, say what would fix it, and let the user decide.
 
-- **Orphan shape.** A shape with nothing connecting into or out of it. It does not run; connect it or remove it.
-- **Two triggers.** More than one trigger on one draft. Keep the one the plan asked for.
+- **More than one trigger.** A second Manual Trigger is refused when you add it, but other combinations are not, so a draft can carry two live ways to start. Keep the one the plan asked for.
 - **JSON body without the header.** An HTTP request Task sending JSON with no explicit `Content-Type: application/json`. It fails at run time and validates cleanly.
 - **Invented parameter.** A Task field that is not in what `inspect_task` returns as the template. Take the template again and override only what the plan needs.
 - **Result read across a boundary.** A named `#result[Shape]` reference reaching into a decision, loop or scope. Capture the value into a Process variable instead.
@@ -54,7 +53,7 @@ Skip anything `validate_process` already catches. It ran clean when you pinned t
 Report three things, and quote the plan line or the handoff key behind every one of them, so the user can check the finding against the plan without trusting your reading of it.
 
 - **Missing or partial.** Something the plan asked for that the draft does not do, or does halfway.
-- **More than was asked.** A shape doing something the plan put out of scope, a Process that is not in the plan's process list, a trigger of a different type than the plan named, or a Task doing work the plan gave to a different Process. Worst of this kind: the draft was already promoted or deployed. Promotion is a deployment and it belongs to the user, so if it has already happened, lead with that.
+- **More than was asked.** A shape doing something the plan put out of scope, a Process that is not in the plan's process list, a trigger of a different type than the plan named, or a Task doing work the plan gave to a different Process. Worst of this kind: the work was already promoted or deployed. Promotion consumes the draft, so you meet this as a draft that has left the draft list and a version that exists without anyone approving it. Promotion is a deployment and it belongs to the user, so if it has already happened, lead with that.
 - **There but wrong.** A field mapped to the wrong target, a transformation the mapping table does not describe, an error policy that does something other than what section 6 says.
 
 ## Say what the reading cannot reach
