@@ -1,13 +1,13 @@
 {
   "name": "frends",
-  "description": "Frends Platform MCP: work with your Frends tenant from Claude and Codex.",
+  "description": "Frends Platform MCP: work with your Frends tenant from Claude Code.",
   "owner": {
     "name": "Frends"
   },
   "plugins": [
     {
       "name": "frends",
-      "description": "Work with your Frends tenant through the Frends Platform MCP: find and inspect Processes, diagnose failures, plan integrations, and build them.",
+      "description": "Work with your Frends tenant through the Frends Platform MCP: find and inspect Processes, diagnose failures, plan integrations, build and review drafts, and run Processes, with a permission prompt before anything leaves the draft stage.",
       "source": "./frends",
       "author": {
         "name": "Frends"

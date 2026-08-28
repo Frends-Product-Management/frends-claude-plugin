@@ -1,5 +1,36 @@
 # frends
 
+## 0.6.0
+
+### Minor Changes
+
+- Route to the server's own guides instead of restating them. `build-a-process`, `find-and-inspect` and `diagnose-failures` now open by fetching the served guide that owns the mechanics (`process-authoring`, `search-processes`, `find-integration`, `explore-tasks`, `manage-environments`, `diagnose-process`) and keep only what no guide carries: the order to work in, where the work stops, and the checks validation cannot make.
+
+  - Removed from `build-a-process` because the process-authoring guide owns them: the four draft modes, parameter modes and template interpolation, the reference-value table, the `#result` across a branch rule, `#var.error`, and the `#result.Body` reading shape.
+  - Removed from `diagnose-failures` because the diagnose-process guide owns them: the instance and detail tool mechanics and the temporal patterns.
+  - Removed from `find-and-inspect` because the guides own them: the `list_processes` shape lecture and the Task discovery mechanics.
+  - The plugin states one boundary where it stops earlier than the guide continues: build work ends at the validated draft, and promoting, deploying and activating are the person's separate decision. It is written as a division of labour, not as a contradiction.
+
+- Add a permission hook that asks the person before a tool call leaves the draft stage: `create_process_from_draft`, `deploy_process`, `start_process`, `import_task`, `create_environment_variable`. The prompt names the action and its effect, including that an unspecified `activateTriggers` means active, and shows parameter names but never values. It asks; it never denies.
+
+- Add a session-start hook with three lines: the server serves its own guides, a skill that names a guide fetches it first, and the plugin's safety boundaries still apply. No routing table; the descriptions route.
+
+- Add the `run-a-process` skill. Run, start and test intents had no owner; the build skill's description claimed them and its body said to stop. The new skill routes to the execute-process guide's confirmation protocol and adds what the guide does not say: a draft cannot run, a test has the same side effects as a real run, and the permission prompt is a backstop, not the approval.
+
+- Add the `draft-reviewer` agent, read-only, dispatched twice by `review-a-draft` with one frozen snapshot of the draft and the fetched process-authoring guide, one brief per axis. When the session cannot run agents, the skill does both readings inline.
+
+- `process-patterns`: each shape gets a reference file with its ordered shapes, the error handling seen in real Processes of that kind, and the usual mistakes, read out of two dozen exported Processes with every customer and system detail removed. Counts are stated as the evidence and its limit. The error-handling reality differs by shape: endpoints pass the upstream status through, MCP tools answer with a success status and put the outcome in the body, syncs treat a bad record as data, file exchanges checkpoint and wait.
+
+- `review-a-draft`: the conventions axis now applies the served guide's pitfall list first and keeps only the plugin's own checks. Five items left because the guide owns them: result across a boundary, result on a catch path, invented parameter, statement in an expression shape, and "uncontained external call", which the exported sample also contradicts; error handling is now judged against the plan's failure section.
+
+### Patch Changes
+
+- `build-a-process` and `find-and-inspect` no longer create a draft in order to inspect a deployment. `get_process_data` reads a deployment; a fork is build work and needs the person to ask for it.
+- `build-a-process`: the build loop has a floor. The same validation error after two different fixes ends the loop with a report instead of a third guess. A failed `process_batch_mutate` rolls the whole batch back, so recovery is a corrected batch, not a repair.
+- `build-a-process` description no longer claims "run a Process for a test"; `getting-connected` and `diagnose-failures` descriptions now separate a connection that does not work from a run that failed; `process-patterns` is for requirements known and shape undecided, `integration-planning` for requirements still open.
+- `getting-connected`: one sentence on the audit log, because every tool call's arguments are written there under the Private Application's name.
+- README: the Codex section now claims Claude Code support and the verified Codex path only; the new gate section leads with the two ways the hook can be absent and the permission rule that survives them.
+
 ## 0.5.0
 
 ### Minor Changes
