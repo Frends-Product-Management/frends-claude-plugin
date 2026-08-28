@@ -10,7 +10,12 @@ process.stdin.on("end", () => {
   const a = (input.tool_input && typeof input.tool_input === "object") ? input.tool_input : {};
   const r = (a.request && typeof a.request === "object") ? a.request : a;
   const show = (v) => (v === undefined || v === null || v === "" ? "?" : String(v).slice(0, 80));
-  const names = (o) => (o && typeof o === "object") ? Object.keys(o).slice(0, 10).map((k) => k.slice(0, 40)).join(", ") : "";
+  const names = (o) => {
+    if (!o || typeof o !== "object") { return ""; }
+    const keys = Object.keys(o);
+    const shown = keys.slice(0, 10).map((k) => k.slice(0, 40)).join(", ");
+    return keys.length > 10 ? `${shown} and ${keys.length - 10} more` : shown;
+  };
   const reasons = {
     create_process_from_draft: () =>
       `Promote draft ${show(r.draftId)}${r.name ? ` as "${show(r.name)}"` : ""}. This compiles it, deploys the new version to the development Agent Group and consumes the draft. ` +

@@ -29,10 +29,13 @@ M=$(python3 -c 'import json;print(json.load(open("frends/hooks/hooks.json"))["ho
 gated=$(while read -r t; do echo "mcp__plugin_frends_frends__$t" | grep -qE "^($M)$" && echo "$t"; done < docs/served-tool-names.txt | sort | tr '\n' ' ')
 [ "$gated" = "create_environment_variable create_process_from_draft deploy_process import_task start_process " ] || { echo "  gated: $gated"; fail=1; }
 
-say "the hook answers ask on every input, and never echoes a value"
+say "the hook answers ask on each test input, and never echoes a value"
 for j in '{}' 'not json' \
   '{"tool_name":"mcp__plugin_frends_frends__create_process_from_draft","tool_input":{"request":{"draftId":7,"activate":true}}}' \
+  '{"tool_name":"mcp__plugin_frends_frends__create_process_from_draft","tool_input":{"draftId":7}}' \
   '{"tool_name":"mcp__plugin_frends_frends__deploy_process","tool_input":{"sourceDeploymentId":1,"targetAgentGroupId":2}}' \
+  '{"tool_name":"mcp__plugin_frends_frends__deploy_process","tool_input":{"sourceDeploymentId":1,"targetAgentGroupId":2,"activateTriggers":false}}' \
+  '{"tool_name":"mcp__plugin_frends_frends__import_task","tool_input":{"packageId":"Frends.HTTP","packageVersion":"1.2.3"}}' \
   '{"tool_name":"mcp__plugin_frends_frends__start_process","tool_input":{"deploymentId":9,"triggerParameters":{"orderId":"SECRETVALUE"}}}' \
   '{"tool_name":"mcp__plugin_frends_frends__create_environment_variable","tool_input":{"groupName":"G","variableName":"V","type":"Secret","value":"SECRETVALUE"}}'; do
   out=$(echo "$j" | node frends/hooks/ask-before-leaving-the-draft.js) || { echo "  hook crashed on: $j"; fail=1; continue; }

@@ -15,7 +15,7 @@
 
 - Add a session-start hook with three lines: the server serves its own guides, a skill that names a guide fetches it first, and the plugin's safety boundaries still apply. No routing table; the descriptions route.
 
-- Add the `run-a-process` skill. Run, start and test intents had no owner; the build skill's description claimed them and its body said to stop. The new skill routes to the execute-process guide's confirmation protocol and adds what the guide does not say: a draft cannot run, a test has the same side effects as a real run, and the permission prompt is a backstop, not the approval.
+- Add the `run-a-process` skill. Run, start and test intents had no owner; the build skill's description claimed them and its body said to stop. The new skill routes to the execute-process guide's confirmation protocol and adds what the guide does not weigh: promoting a draft in order to test it is a separate decision with a cost, a test has the same side effects as a real run, and the permission prompt is a backstop, not the approval.
 
 - Add the `draft-reviewer` agent, read-only, dispatched twice by `review-a-draft` with one frozen snapshot of the draft and the fetched process-authoring guide, one brief per axis. When the session cannot run agents, the skill does both readings inline.
 
