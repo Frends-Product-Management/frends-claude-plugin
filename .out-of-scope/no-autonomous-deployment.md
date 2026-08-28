@@ -13,6 +13,7 @@ The escape hatches already exist:
 - The draft is complete and inspectable, so approving it is a review rather than a leap.
 - The `review-a-draft` skill reports what the draft does against the plan before anyone promotes it.
 - Promotion and deployment are one action each in the Portal.
+- The plugin's permission hook asks the person before any of these tools runs, whatever the skill said.
 
 ## Prior requests
 

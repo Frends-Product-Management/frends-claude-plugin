@@ -20,6 +20,9 @@ The ambiguous rows are the ones that matter. They are pairs of skills whose terr
 | "Build me a draft that reads orders and posts them to the ERP" | build-a-process | process-patterns |
 | "Is this draft ready to promote?" | review-a-draft | build-a-process |
 | "Check the draft against the plan" | review-a-draft | diagnose-failures |
+| "Run the order sync now" | run-a-process | build-a-process |
+| "Can I test the draft I just built?" | run-a-process | build-a-process |
+| "Which Tasks can I use for this?" | find-and-inspect | build-a-process |
 
 ## Ambiguous cases, and where each should land
 
@@ -32,7 +35,13 @@ The ambiguous rows are the ones that matter. They are pairs of skills whose terr
 | "Review this integration" (no draft exists yet) | integration-planning | There is nothing to review; the plan is the artifact that exists |
 | "How do I structure this, and then build it?" | process-patterns first, then build-a-process | Two steps, in that order; not one skill doing both |
 | "The ERP admin needs to answer this" | integration-planning, questionnaire mode | Not a build or review question |
-| "Which Tasks can I use for this?" | find-and-inspect | Tenant contents, not a build decision |
+| "Run it once so we can see" (during a build) | run-a-process | build-a-process stops at the validated draft and hands the run over |
+| "I get a 401 and my sync failed" | getting-connected | A connection that returns 401 never ran anything; diagnose-failures needs a run that exists |
+| "We need a nightly sync, what do we need to decide?" | integration-planning | The requirements are open; process-patterns needs them known |
+
+## Routing registry
+
+This file is the one routing table. The session-start hook carries none, and no skill body carries one, so a routing change happens here and in the descriptions, nowhere else.
 
 ## What a failure looks like
 
