@@ -1,6 +1,6 @@
 ---
 name: process-patterns
-description: Choose the right shape for a Frends integration Process before building it. Use when someone is unsure how to structure an integration, asks what kind of Process fits a need, or wants to compare approaches before any building starts. Do not use when the shape is already chosen or when someone asks to build or edit a draft.
+description: Choose the right shape for a Frends integration Process before building it, and say which shapes go where. Use when the requirements are known but the structure is not, when someone asks what kind of Process fits a need, or wants to compare approaches before any building starts. Do not use when the shape is already chosen, when someone asks to build or edit a draft, or when the requirements themselves are still open.
 ---
 
 # Choosing a Process shape
@@ -13,21 +13,33 @@ Use a named tool only if it appears in this session's tool list. A missing tool 
 
 Each shape below names the trigger tool it needs. A shape whose trigger tool this session does not expose can still be built in the Portal, so recommend it honestly and say that the build has to happen there.
 
+## Where the shape knowledge comes from
+
+The shapes and the rules below were read out of two dozen real Processes exported from a Frends tenant, with every customer, system and credential detail removed. Where a rule says how often something appeared, that count is the evidence for it and its limit: two dozen Processes from one tenant are a sample, not the platform. These are common shapes, not a list of everything a Process can be. When a need fits none of them, say so and design from the trigger outwards.
+
 ## The common shapes
 
-These are common shapes, not a list of everything a Process can be. When a need fits none of them, say so and design from the trigger outwards.
+Each shape has its own reference file with the ordered shapes, the error-handling that was seen in real Processes of that kind, and the usual mistakes. Read the reference for the shape you recommend before describing it to the user, and read two when the choice is close.
 
-**API endpoint.** Something calls in and waits for an answer. An HTTP Trigger starts the Process, steps do the work, and the Process answers through an HTTP result shape carrying the status code, content type and content. A Process started this way should always answer with an HTTP result; Processes started by hand or on a schedule return a plain result instead. Needs `process_add_http_trigger`. The usual mistake: forgetting the response shape, so the caller gets nothing useful back.
+**API endpoint.** Something calls in and waits for an answer. An HTTP Trigger starts the Process, steps do the work, and the Process answers through an HTTP result shape carrying the status code, content type and content. Needs `process_add_http_trigger`. Reference: `references/api-endpoint.md`.
 
-**MCP tool.** An AI client calls the Process as a tool. An MCP Trigger carries the tool name and its input schema, the steps read the arguments, call the system, reshape the answer, and return JSON. Keep it thin: one tool, one job. Needs `process_add_mcp_trigger`. The usual mistake: a vague tool name and description, which is all the calling AI client ever sees.
+**MCP tool.** An AI client calls the Process as a tool. An MCP Trigger carries the tool name and its input schema, the steps read the arguments, call the system, reshape the answer, and return JSON. Needs `process_add_mcp_trigger`. Reference: `references/mcp-tool.md`.
 
-**Scheduled sync.** Nothing calls in; the Process wakes up, reads what changed, and acts. A Schedule Trigger starts it, the first steps work out what "changed since last run" means, then the rest act on those records. Needs `process_add_schedule_trigger`. The usual mistake: leaving "changed since last run" undefined, and runs that overlap when one takes longer than the interval.
+**Scheduled sync.** Nothing calls in; the Process wakes up, reads what changed, and acts. A Schedule Trigger starts it. Needs `process_add_schedule_trigger`. Reference: `references/scheduled-sync.md`.
 
-**Event-driven routing.** Things arrive one at a time and different kinds need different handling. A trigger fires per arriving event (a queue message, a file, an incoming call), a decision classifies it, and branches fan out per kind. Needs the matching trigger tool, such as `process_add_queue_trigger`, plus `process_add_decision` and `process_add_decision_branch`. The usual mistake: classifying on a field that not every event carries.
+**Event-driven routing.** Things arrive one at a time and different kinds need different handling. A trigger fires per arriving event, a decision classifies it, and branches fan out per kind. Needs the matching trigger tool, such as `process_add_queue_trigger`, plus `process_add_decision` and `process_add_decision_branch`. Reference: `references/event-driven-routing.md`.
 
-**File transform.** A file appears, gets parsed, transformed, and sent onward. A file watch trigger starts the Process when the file arrives; steps parse it, reshape the content, and deliver it. Needs `process_add_file_watch_trigger`. The usual mistakes: no rule for what happens to a file once handled, and no path for a file that fails halfway.
+**File transform.** A file appears, gets parsed, transformed, and sent onward, sometimes with a wait for the other side to answer. Needs `process_add_file_watch_trigger`. Reference: `references/file-transform.md`.
 
-**Task chain.** A short utility: a person starts it, a few Tasks and expressions run in order, and it returns a result. A Manual Trigger, two to five steps, one connection line through them. Needs `process_add_manual_trigger`. The usual mistake: growing a quick chain into a real integration without ever revisiting the trigger or the error handling.
+**Task chain.** A short utility: a person starts it, a few Tasks and expressions run in order, and it returns a result. Needs `process_add_manual_trigger`. Reference: `references/task-chain.md`.
+
+## Rules that held across every shape
+
+- The smallest Process that does work is a trigger, one activity and a Return shape. Start there and widen.
+- A Process may have several triggers of different kinds feeding the same first shape, and at most one Manual Trigger; validation refuses a second Manual Trigger.
+- A promoted result, the value monitoring shows for a run, was set on Return and Code shapes and nowhere else in the sample. Set it there when the user asks for one.
+- Retry on a Task was set once in the whole sample. Real Processes handle failure by design of the shape, not by retry settings; the references say how each kind does it.
+- In a Task's input fields a reference such as `#var.Name` is written bare in C# mode; in a template or content field it is written as `{{ #var.Name }}`. The wrong form validates and then produces literal text at run time. The server's process-authoring guide has the full mode table.
 
 ## Choosing between them
 
