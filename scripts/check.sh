@@ -37,10 +37,12 @@ for j in '{}' 'not json' \
   '{"tool_name":"mcp__plugin_frends_frends__deploy_process","tool_input":{"sourceDeploymentId":1,"targetAgentGroupId":2,"activateTriggers":false}}' \
   '{"tool_name":"mcp__plugin_frends_frends__import_task","tool_input":{"packageId":"Frends.HTTP","packageVersion":"1.2.3"}}' \
   '{"tool_name":"mcp__plugin_frends_frends__start_process","tool_input":{"deploymentId":9,"triggerParameters":{"orderId":"SECRETVALUE"}}}' \
+  '{"tool_name":"mcp__plugin_frends_frends__start_process","tool_input":{"deploymentId":9,"triggerParameters":{"a":1,"b":1,"c":1,"d":1,"e":1,"f":1,"g":1,"h":1,"i":1,"j":1,"k":1,"l":"SECRETVALUE"}}}' \
   '{"tool_name":"mcp__plugin_frends_frends__create_environment_variable","tool_input":{"groupName":"G","variableName":"V","type":"Secret","value":"SECRETVALUE"}}'; do
   out=$(echo "$j" | node frends/hooks/ask-before-leaving-the-draft.js) || { echo "  hook crashed on: $j"; fail=1; continue; }
   echo "$out" | python3 -c 'import sys,json; d=json.load(sys.stdin)["hookSpecificOutput"]; assert d["hookEventName"]=="PreToolUse" and d["permissionDecision"]=="ask" and len(d["permissionDecisionReason"])<=600' 2>/dev/null || { echo "  bad answer for: $j"; fail=1; }
   echo "$out" | grep -q SECRETVALUE && { echo "  value echoed for: $j"; fail=1; }
+  echo "$j" | grep -q '"l":' && { echo "$out" | grep -q "and 2 more" || { echo "  omitted parameter names not counted"; fail=1; }; }
 done
 
 say "no internal paths or private tooling in public files"

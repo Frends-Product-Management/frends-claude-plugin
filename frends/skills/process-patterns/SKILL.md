@@ -39,7 +39,6 @@ Each shape has its own reference file with the ordered shapes, the error-handlin
 - A Process may have several triggers of different kinds feeding the same first shape, and at most one Manual Trigger; validation refuses a second Manual Trigger.
 - A promoted result, the value monitoring shows for a run, was set on Return and Code shapes and nowhere else in the sample. Set it there when the user asks for one.
 - Retry on a Task was set on one Task in the whole sample. The references say what the sample did instead for each kind; whether a retry setting fits is the plan's call.
-- The field mode rules in the served process-authoring guide decide whether a reference is evaluated or left as literal text. A wrong mode validates and fails at run time, so read that table before configuring a Task, not after validation passes.
 
 ## Choosing between them
 
