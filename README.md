@@ -2,7 +2,7 @@
 
 Work with your Frends tenant from Claude Code: find and inspect Processes, diagnose failed
 runs, plan and build integrations, review the draft, and run a Process on your say-so. The
-plugin bundles the tenant connector, eight skills, a read-only review agent, and a permission
+plugin bundles the tenant connector, 8 skills, a read-only review agent, and a permission
 hook that asks you before anything leaves the draft stage.
 
 The Frends Platform MCP server serves its own guides for the tool mechanics. The skills here
@@ -83,9 +83,9 @@ A permission rule in your own settings survives both. Add this to your user or p
 }
 ```
 
-Check that the hook is wired: ask Claude Code to promote a throwaway draft. You must be asked,
-and the prompt must carry the `[plugin:frends]` label. If it promotes without asking, the hook
-is not running; check that `node` is on the PATH Claude Code starts from.
+Check that the hook is wired: ask Claude Code to promote a throwaway draft. You must be asked
+before anything happens. If it promotes without asking, the hook is not running; check that
+`node` is on the PATH Claude Code starts from.
 
 The hook needs Node.js. The prompt is interactive by design, so in a non-interactive run the
 call waits for an answer that cannot come; do not script these five tools.
@@ -179,6 +179,8 @@ delivery.
 | `hooks/` | The permission prompt before the five tools above, and three lines of context at session start |
 | `agents/draft-reviewer` | A read-only agent that reads one draft snapshot on one review axis; `review-a-draft` dispatches it twice |
 | `docs/ownership.md` | Which statements the plugin may own, and which belong to the server's guides |
+| `docs/served-tool-names.txt` | The tool names the server serves, which the checks hold the skills to |
+| `scripts/check.sh` | The release checks |
 
 ## Is it working?
 
@@ -202,11 +204,13 @@ What you should see when each skill is doing its job. Every line is something yo
 
 ## For maintainers
 
-What was tested before 0.6.0, and what was not: the hook script is unit-tested on its input
-cases, the hook file parses, the matcher matches exactly the five tool names, and the skills
-pass the terminology, tool-name and sanitation checks. The prompt appearing in a live Claude
-Code session, its behaviour in bypass mode and with hooks disabled, the agent's tool allowlist,
-and Node on Windows were not exercised in the release environment; treat those as claims to
+`scripts/check.sh` runs the release checks: the manifests parse, the capability guard is
+byte-identical across skills, every tool name in a skill or the agent is in
+`docs/served-tool-names.txt`, the permission matcher gates exactly the five tools, the hook
+answers `ask` on every input and never echoes a value, and no internal path reaches a public
+file. Run it before every release. What it cannot check, and what was not exercised before
+0.6.0: the prompt appearing in a live Claude Code session, its behaviour in bypass mode and
+with hooks disabled, the agent's tool allowlist, and Node on Windows. Treat those as claims to
 verify in your own session, with the self-test above.
 
 Every content change must bump `version` in `frends/.claude-plugin/plugin.json`. Claude

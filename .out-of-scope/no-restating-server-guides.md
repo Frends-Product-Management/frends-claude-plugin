@@ -15,4 +15,4 @@ The escape hatches already exist:
 
 ## Prior requests
 
-- "Some of the skills contradict the guides the server itself serves; they should at most be pointers to the built-in guides." (an R&D reviewer, August 2026; this decision is the answer)
+- "Some of the skills contradict the guides the server itself serves; they should at most be pointers to the built-in guides." (received while 0.5.0 was current; this decision is the answer)

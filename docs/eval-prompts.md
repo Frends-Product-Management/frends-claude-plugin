@@ -36,7 +36,8 @@ The ambiguous rows are the ones that matter. They are pairs of skills whose terr
 | "How do I structure this, and then build it?" | process-patterns first, then build-a-process | Two steps, in that order; not one skill doing both |
 | "The ERP admin needs to answer this" | integration-planning, questionnaire mode | Not a build or review question |
 | "Run it once so we can see" (during a build) | run-a-process | build-a-process stops at the validated draft and hands the run over |
-| "I get a 401 and my sync failed" | getting-connected | A connection that returns 401 never ran anything; diagnose-failures needs a run that exists |
+| "The Frends tools give me a 401" | getting-connected | The connection itself is refused; nothing ran |
+| "My sync failed with a 401 from the ERP" | diagnose-failures | The connection works and a run exists; the 401 came from a Task inside it |
 | "We need a nightly sync, what do we need to decide?" | integration-planning | The requirements are open; process-patterns needs them known |
 
 ## Routing registry

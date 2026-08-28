@@ -12,11 +12,11 @@ Nothing calls in. The Process wakes up on a schedule, reads what changed, and ac
 
 ## Error handling seen in real syncs
 
-Syncs in the sample treated a bad record as data, not as a failure: the record was written to a skipped list with the reason, the loop went on, and the Return reported the counts. A whole run failed only when the source or the target could not be reached at all. Scope and catch inside the loop is how one bad record stays one bad record.
+The syncs in the sample treated a bad record as data, not as a failure: the record was written to a skipped list with the reason, the loop went on, and the Return reported the counts. A whole run failed only when the source or the target could not be reached at all. Scope and catch inside the loop is how one bad record stays one bad record.
 
 ## Usual mistakes
 
 - No watermark, so every run re-sends everything, or a watermark written before the writes succeed, so a failed run skips records forever.
 - A run that takes longer than its interval and overlaps the next one; decide what happens then and write it down.
-- Counting a run as success when zero records were read; a source that suddenly returns nothing is usually a broken source.
+- Counting a run as success when zero records were read, without having decided whether an empty read is normal for this source.
 - Growing a quick sync into an integration without revisiting what the schedule and the watermark mean.

@@ -33,7 +33,7 @@ Order the slices by what blocks what:
 
 1. Preparation comes first. A Task package that is not installed and an environment variable name that does not exist block everything that uses them.
 2. A shared building block other Processes call is always a blocker and never blocked. Build it before its callers.
-3. Inside one Process, start with a Manual Trigger and swap in the real trigger as the last slice: add the trigger the integration needs and remove the Manual Trigger in the same slice, because a Process keeps exactly one trigger. A Manual Trigger keeps the Process inert while you build, since nothing starts it by itself. Adding a live trigger early makes an endpoint or a schedule real the moment the Process is deployed, which is why it belongs at the end.
+3. Inside one Process, start with a Manual Trigger and add the real trigger as the last slice. A Process may carry several triggers of different kinds feeding the same first shape, so keep the Manual Trigger when the plan wants a hand-run entry and remove it in that same slice when it does not. A Manual Trigger keeps the Process inert while you build, since nothing starts it by itself. Adding a live trigger early makes an endpoint or a schedule real the moment the Process is deployed, which is why it belongs at the end.
 4. Two Processes that do not depend on each other can be built in either order. Slices inside one draft are strictly sequential: one draft is one shape graph, and two sets of changes to it interleave into a mess no tool will untangle.
 
 Every slice is verifiable by validation. A slice is only demonstrable when the user agrees to a run, so never promise a demonstration you need permission to give.
@@ -56,7 +56,7 @@ The loop has a floor. When the same validation error comes back after two differ
 
 These pass `validate_process` and still fail at run time or in use. Check them yourself.
 
-**One trigger.** Validation refuses a second Manual Trigger and nothing else, so a draft can carry two live ways to start. Keep the one the plan asked for.
+**A trigger the plan did not ask for.** Validation refuses a second Manual Trigger and nothing else, so a draft can carry a live way to start that nobody planned. Keep the triggers the plan names and remove the rest.
 
 **JSON body without the header.** An HTTP request Task sending JSON needs `Content-Type: application/json` set explicitly. The Task does not add it, and the missing header fails silently at run time while the draft validates.
 

@@ -17,7 +17,7 @@ Call `get_guide` with `execute-process` and follow it: it carries the checks bef
 
 ## What this skill adds
 
-**A draft cannot run.** Only a deployed Process starts. If the user wants to try a draft, say that trying it means promoting it, which compiles the draft and deploys the new version to the development Agent Group, and that promoting is a separate decision for them to make. Do not promote in order to test.
+**Do not promote in order to test.** When the user wants to try a draft, the guide will tell them it has to be deployed first. Say what that costs before anyone does it: promoting compiles the draft and deploys the new version to the development Agent Group, and it is a separate decision for them to make, not a step of the test.
 
 **Testing has side effects too.** A test run writes the same rows and sends the same messages as a real one. Before the confirmation block, name the data the run will touch, whether it is safe test data or live records, who reverses the effect if the result is wrong, and that the parameters go into the tenant's audit log. A run whose effects nobody can reverse deserves a pause, not a faster confirmation.
 

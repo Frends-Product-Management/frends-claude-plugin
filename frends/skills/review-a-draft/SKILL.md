@@ -15,9 +15,7 @@ Use a named tool only if it appears in this session's tool list. A missing tool 
 
 Find the draft with `list_process_drafts` and run `validate_process` on it once, here. A draft that does not validate is not ready for review: hand it back for building, because the errors validation reports are the work that comes first.
 
-A deployed Process is reviewed from `get_process_data` with its `deploymentId`, which returns the full definition. Do not create a draft to review a deployment unless the user asks for that in so many words; a fork is build work, and it leaves a draft in the tenant that they will have to discard.
-
-Then take one snapshot: `process_get_structure` for the shapes and their connections, `process_get_shape_config` for each shape that matters, once. Every finding below reads from that snapshot, so both axes see the same draft even if it changes while the review runs.
+Then take one snapshot and read only from it. For a draft: `process_get_structure` for the shapes and their connections, then `process_get_shape_config` for every shape it lists, once each. For a deployed Process the shape tools do not apply, because they read drafts only: the snapshot is the definition `get_process_data` returns for the `deploymentId`, and the review says it worked from the definition rather than the shape tools. Do not create a draft to review a deployment unless the user asks for that in so many words; a fork is build work, and it leaves a draft in the tenant that they will have to discard. Every finding below reads from the snapshot, so both axes see the same Process even if it changes while the review runs.
 
 ## Fetch the conventions from the server
 
@@ -39,7 +37,7 @@ Skip anything `validate_process` already catches. It ran clean when you pinned t
 
 First apply the guide: read each pitfall in its list and each row of its reference-value table against the snapshot, and report what the draft breaks, quoting the guide line. Then the checks the guide does not carry:
 
-- **More than one trigger.** A second Manual Trigger is refused when you add it, but other combinations are not, so a draft can carry two live ways to start. Keep the one the plan asked for.
+- **A trigger the plan did not ask for.** A second Manual Trigger is refused when it is added, but other combinations are not, so a draft can carry a live way to start that nobody planned. Keep the triggers the plan names.
 - **JSON body without the header.** An HTTP request Task sending JSON with no explicit `Content-Type: application/json`. It fails at run time and validates cleanly.
 - **Value lost before the failure.** A value the failure path needs that was never assigned to a Process variable before the risky step ran.
 - **HTTP Process with no answer.** A Process started by an HTTP Trigger with a path that never reaches an HTTP result shape. The caller gets nothing back.

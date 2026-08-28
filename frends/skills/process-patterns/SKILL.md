@@ -15,7 +15,7 @@ Each shape below names the trigger tool it needs. A shape whose trigger tool thi
 
 ## Where the shape knowledge comes from
 
-The shapes and the rules below were read out of two dozen real Processes exported from a Frends tenant, with every customer, system and credential detail removed. Where a rule says how often something appeared, that count is the evidence for it and its limit: two dozen Processes from one tenant are a sample, not the platform. These are common shapes, not a list of everything a Process can be. When a need fits none of them, say so and design from the trigger outwards.
+The shapes and the rules below were read out of 24 real Processes exported from one Frends tenant, with every customer, system and credential detail removed. A rule that says how often something appeared gives that count as its evidence and its limit; a rule without a count describes what the Processes of that kind in the sample did, and nothing more. 24 Processes from one tenant are a sample, not the platform. These are common shapes, not a list of everything a Process can be. When a need fits none of them, say so and design from the trigger outwards.
 
 ## The common shapes
 
@@ -38,8 +38,8 @@ Each shape has its own reference file with the ordered shapes, the error-handlin
 - The smallest Process that does work is a trigger, one activity and a Return shape. Start there and widen.
 - A Process may have several triggers of different kinds feeding the same first shape, and at most one Manual Trigger; validation refuses a second Manual Trigger.
 - A promoted result, the value monitoring shows for a run, was set on Return and Code shapes and nowhere else in the sample. Set it there when the user asks for one.
-- Retry on a Task was set once in the whole sample. Real Processes handle failure by design of the shape, not by retry settings; the references say how each kind does it.
-- In a Task's input fields a reference such as `#var.Name` is written bare in C# mode; in a template or content field it is written as `{{ #var.Name }}`. The wrong form validates and then produces literal text at run time. The server's process-authoring guide has the full mode table.
+- Retry on a Task was set on one Task in the whole sample. The references say what the sample did instead for each kind; whether a retry setting fits is the plan's call.
+- The field mode rules in the served process-authoring guide are where the sample's most frequent build mistake sits. Read that table before configuring a Task, not after validation passes; a wrong mode validates and fails at run time.
 
 ## Choosing between them
 

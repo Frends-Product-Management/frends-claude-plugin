@@ -12,11 +12,10 @@ An AI client calls the Process as a tool and reads the answer.
 
 ## Error handling seen in real MCP tools
 
-Every MCP tool Process in the sample answered with a success status whatever happened, and put the outcome in the body: a field saying whether it worked, the data when it did, and a plain message when it did not. One scope and catch around the work produced that failure branch. The reason is the caller: an AI client handles a structured "it failed because X" far better than a transport error it cannot read.
+The MCP tool Processes in the sample answered with a success status whatever happened, and put the outcome in the body: a field saying whether it worked, the data when it did, and a plain message when it did not. One scope and catch around the work produced that failure branch. The reason is the caller: an AI client handles a structured "it failed because X" far better than a transport error it cannot read.
 
 ## Usual mistakes
 
 - A tool name or description that does not say what the tool does. That text is all the AI client sees.
 - Reading an argument the schema marks optional as if it were always there.
 - One tool that does three jobs. Keep it thin: one tool, one job, and a second Process for the second job.
-- A trigger whose tool name collides with an older Process's tool name; the older one keeps the name.

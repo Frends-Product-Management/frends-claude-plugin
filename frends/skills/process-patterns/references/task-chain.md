@@ -15,5 +15,5 @@ None beyond the platform's own: a chain that fails stops and shows the error in 
 ## Usual mistakes
 
 - Growing a quick chain into a real integration without revisiting the trigger or the error handling.
-- Declaring a parameter with a default and relying on it; defaults are not applied when a run is started through the tools, so every declared parameter needs a value.
+- Declaring a parameter with a default and relying on it; the served execute-process guide says what a hand run does with defaults, and it is not what people expect.
 - Doing work in the Return expression instead of in a shape of its own, which hides it from the run history.
