@@ -1,6 +1,6 @@
 ---
 name: getting-connected
-description: Connect an AI client to a Frends tenant, and work out why a connection is not working. Use when the Frends tools are missing, when a call returns 401 or 404, when lists come back empty, when one specific tool is absent, or when someone is setting up Frends for the first time.
+description: Connect an AI client to a Frends tenant, and work out why the connection itself is not working. Use when the Frends tools are missing, when a call returns 401 or 404, when lists come back empty, when one specific tool is absent, or when someone is setting up Frends for the first time. Do not use when the connection works and a Process run failed, which is a diagnosis.
 ---
 
 # Getting connected to your Frends tenant
@@ -32,6 +32,8 @@ Done when the endpoint is written out in full and they confirm the tenant name i
 Send them to the page before you ask for anything from it. In the Portal, open the admin area, create a Private Application, grant it the MCP permissions they need, and copy the token it issues.
 
 Then ask one thing: whether they have it copied. Never ask them to paste the token into this conversation, and never repeat it back. It goes into their own shell environment and nowhere else.
+
+Say one more thing while they are in the Portal: every tool call made through this connection is written to the tenant's audit log with its arguments, under the Private Application's name. That is why no secret ever travels as a tool argument.
 
 Done when they say the token is copied and it has not been typed into the conversation.
 
