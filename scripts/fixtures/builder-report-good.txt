@@ -1,0 +1,10 @@
+## Built
+Draft 12, an API endpoint with three slices.
+
+## Last validation
+The final validation ran after the last change.
+
+## Remaining
+Nothing.
+
+validate_process: draft 12 · 0 errors · after last change: yes

@@ -1,0 +1,7 @@
+## Findings: conventions
+- An HTTP request Task sends JSON without the Content-Type header. Fix: set it explicitly. Rests on shape send_order. Smallest change: one header row.
+
+## Not verified
+- Whether the target system accepts the payload; needs a run.
+
+Count: 1 finding, worst: the missing Content-Type header

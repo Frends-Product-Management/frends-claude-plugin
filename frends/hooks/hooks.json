@@ -1,5 +1,5 @@
 {
-  "description": "Ask the person before a Frends tool leaves the draft stage, and tell a new session that the server serves its own guides.",
+  "description": "Ask the person before a tool leaves the draft stage; give a new session three lines of context; and, while a loop run is open, record tool events, gate a success claim on validate-after-change, and gate the loop agents' report shapes.",
   "hooks": {
     "PreToolUse": [
       {
@@ -24,6 +24,50 @@
             "command": "node",
             "args": [
               "${CLAUDE_PLUGIN_ROOT}/hooks/session-start.js"
+            ],
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "^mcp__plugin_frends_frends__(validate_process|create_process_draft|process_add_[a-z_]+|process_edit_shape|process_remove_shape|process_remove_connection|process_set_error_handler|process_batch_mutate|create_process_from_draft|deploy_process|start_process|import_task|create_environment_variable)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/hooks/record-tool-event.js"
+            ],
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/hooks/stop-gate.js"
+            ],
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "^frends:(draft-reviewer|process-builder)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/hooks/reviewer-verdict-gate.js"
             ],
             "timeout": 10
           }
