@@ -5,11 +5,15 @@ process.stdout.write([
   "Plugin safety boundaries still apply: build work stops at a validated draft, and promoting, deploying, running, importing a Task package or creating an environment variable is the person's decision.",
 ]
   .concat((() => {
+    // The pointer is project content: resolve it through the contained openRun and
+    // echo only a safe-charset relative path, never the raw file text.
     try {
-      const fs = require("fs"); const path = require("path");
-      const t = fs.readFileSync(path.join(process.cwd(), ".frends", "current-run"), "utf8");
-      const rec = (t.match(/^record: (.+)$/m) || [])[1];
-      return rec ? ["A frends loop run is open at .frends/" + rec.trim() + "; read it before continuing."] : [];
+      const { openRun, path } = require("./_shared.js");
+      const run = openRun(process.cwd());
+      if (!run) { return []; }
+      const rel = path.relative(run.basePath, run.recordPath).split(path.sep).join("/");
+      if (!/^[A-Za-z0-9._/-]{1,120}$/.test(rel)) { return []; }
+      return ["A frends loop run is open at .frends/" + rel + "; read it before continuing."];
     } catch (e) { return []; }
   })())
   .join("\n"));

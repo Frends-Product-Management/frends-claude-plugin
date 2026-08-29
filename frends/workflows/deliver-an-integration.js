@@ -60,7 +60,7 @@ const rows = await pipeline(
   processes,
   (p, item) => agent(
     'Build ONE Frends Process draft for the plan entry below, following your own working rules. ' +
-    'Stop at a validated draft; never promote, deploy, run or import anything.\n\n' +
+    'Stop at a validated draft; never promote, deploy, run, import a Task package or create an environment variable.\n\n' +
     'Plan entry (its acceptance_criteria are frozen; you may not edit them):\n' +
     JSON.stringify(item, null, 2) +
     (plan.error_policy ? '\n\nPlan error policy:\n' + JSON.stringify(plan.error_policy, null, 2) : '') +

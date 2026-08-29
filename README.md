@@ -207,7 +207,7 @@ state: success` when the record shows the last validation ran before the last ch
 writes the ledger line when a run closes. A verdict gate bounces, once, an agent report
 that is missing its required sections. Every gate message opens with the same sentence:
 "GATE RESULT ONLY, presence and order, not evidence of quality." A gate can fail work;
-only the reviewer and you can pass it. The gates fail open on their own errors and say so.
+only the reviewer and you can pass it. The gates fail open on their own errors and write a note to stderr, which Claude Code keeps in its hook debug output, not in the conversation.
 
 Self-tests you can run in your own session: open a loop run, make one draft change, then
 claim `terminal state: success` without validating, and the stop must be blocked exactly

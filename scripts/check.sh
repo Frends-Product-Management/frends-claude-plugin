@@ -69,6 +69,14 @@ echo "$out" | grep -q '"decision"' && { echo "  stop-gate: blocked a valid succe
 grep -q '\*\*success\*\*' "$d/.frends/ledger.md" || { echo "  stop-gate: no ledger line on success"; fail=1; }
 [ -f "$d/.frends/current-run" ] && { echo "  stop-gate: run not closed on success"; fail=1; }
 grep -q '^terminal state: success' "$d/.frends/runs/r.md" || { echo "  stop-gate: state line not persisted into the record"; fail=1; }
+tail -1 "$d/.frends/ledger.md" | grep -qE "$(python3 -c 'import json;print(json.load(open("frends/hooks/formats.json"))["ledgerLineRe"])')" || { echo "  stop-gate: the ledger line does not match ledgerLineRe"; fail=1; }
+grep -E "$(python3 -c 'import json;print(json.load(open("frends/hooks/formats.json"))["evtLineRe"])')" "$d/.frends/runs/r.md" | head -1 | grep -q evt || { echo "  record evt lines do not match evtLineRe"; fail=1; }
+
+# a state line that carries its evidence on the same line still counts
+mkrun "$d"
+printf 'evt · process_add_task · mutate · draft 7 · ok\nevt · validate_process · validate · draft 7 · errors: 0\n' >> "$d/.frends/runs/r.md"
+out=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: success · validate_process draft 7: 0 errors"}' "$d" | stopgate)
+[ -f "$d/.frends/current-run" ] && { echo "  stop-gate: missed a state line with trailing evidence"; fail=1; }
 
 # the state named only in prose, not on its own line: no state, no close, no block
 mkrun "$d"
@@ -122,6 +130,7 @@ out=$(echo 'not json' | stopgate); [ -z "$out" ] || { echo "  stop-gate: noisy o
 
 # mutation: a corrupted formats.json must make the gate fail OPEN, proving the harness can fail
 cp frends/hooks/formats.json "$d/formats.bak"
+trap 'cp "$d/formats.bak" frends/hooks/formats.json 2>/dev/null || true' EXIT
 echo 'broken' > frends/hooks/formats.json
 mkrun "$d"
 printf 'evt · validate_process · validate · draft 7 · errors: 0\nevt · process_add_task · mutate · draft 7 · ok\n' >> "$d/.frends/runs/r.md"
@@ -130,6 +139,7 @@ vout=$(printf '{"agent_type":"frends:draft-reviewer","last_assistant_message":"j
 printf '{"cwd":"%s","tool_name":"mcp__plugin_frends_frends__process_add_expression","tool_input":{"draftId":7}}' "$d" | node frends/hooks/record-tool-event.js 2>/dev/null
 nerr=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: success"}' "$d" | stopgate 2>&1 >/dev/null)
 mv "$d/formats.bak" frends/hooks/formats.json
+trap - EXIT
 echo "$out" | grep -q '"decision"' && { echo "  stop-gate: blocked while broken (must fail open)"; fail=1; }
 echo "$vout" | grep -q '"decision"' && { echo "  verdict-gate: blocked while broken (must fail open)"; fail=1; }
 grep -q 'evt · process_add_expression' "$d/.frends/runs/r.md" && { echo "  recorder: wrote while broken"; fail=1; }

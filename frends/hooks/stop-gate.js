@@ -10,8 +10,9 @@ const { readStdin, loadFormats, openRun, bareTool, note, fs, path } = require(".
 // count is the reviewer's.
 function evidenceFromRecord(text, F) {
   const drafts = {}; let i = 0; let saw = false;
+  const evtRe = new RegExp(F.evtLineRe);
   for (const line of text.split("\n")) {
-    const m = line.match(/^evt · ([a-z_]+) · (mutate|validate|leave-draft|layout) · draft ([^·]+) · (.+)$/);
+    const m = line.match(evtRe);
     if (!m) { continue; }
     saw = true; i += 1;
     const id = m[3].trim();
