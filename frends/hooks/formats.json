@@ -8,7 +8,7 @@
     "exhausted",
     "stagnated"
   ],
-  "terminalStateRe": "^[ \\t]*(?:[#*_`-]{1,6}[ \\t]*|[0-9]{1,2}\\.[ \\t])*terminal state: (success|clean no-op|blocked|approval-required|exhausted|stagnated)\\b.*$",
+  "terminalStateRe": "^[ \\t]*(?:[0-9]{1,2}\\.[ \\t]+)?(?:[#*_`-]{1,6}[ \\t]+)?[#*_`-]{0,6}[ \\t]*terminal state: (success|clean no-op|blocked|approval-required|exhausted|stagnated)\\b.*$",
   "recordLineLiteral": "turn N · action · evidence · remaining",
   "recordLineRe": "^turn [0-9]+ · .+ · .+ · .+$",
   "ledgerLineRe": "^- [0-9]{4}-[0-9]{2}-[0-9]{2} · .+ · .+ · \\*\\*(success|clean no-op|blocked|approval-required|exhausted|stagnated)( · unverified)?\\*\\* · .+$",

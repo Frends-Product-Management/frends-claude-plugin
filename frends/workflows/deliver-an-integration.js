@@ -129,6 +129,9 @@ const rows = await pipeline(
       if (!rebuilt || rebuilt.lastValidate.errors !== 0 || !rebuilt.lastValidate.afterLastChange) {
         return { name: item.name, state: 'blocked', draftId: build.draftId, reason: 'the rebuild round did not end in a clean validation', findings: findings, verdicts: verdicts }
       }
+      if (rebuilt.draftId !== build.draftId) {
+        return { name: item.name, state: 'blocked', draftId: build.draftId, reason: 'the rebuild came back in a different draft (' + rebuilt.draftId + '); the reviewed draft was ' + build.draftId, findings: findings }
+      }
       snapshot = await snapshotOf(rebuilt.draftId, item.name)
       if (!snapshot) { return { name: item.name, state: 'blocked', draftId: rebuilt.draftId, reason: 'no independent snapshot after the rebuild; the re-review did not run', findings: findings } }
       verdicts = await reviewOf(item, snapshot)

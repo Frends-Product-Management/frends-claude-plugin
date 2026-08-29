@@ -111,6 +111,10 @@ printf 'evt · process_add_task · mutate · draft 7 · ok\nevt · validate_proc
 out=$(printf '{"cwd":"%s","last_assistant_message":"# terminal state: success"}' "$d" | stopgate)
 [ -f "$d/.frends/current-run" ] && { echo "  stop-gate: missed a heading state line"; fail=1; }
 
+# the state regex answers adversarial decoration runs fast (no catastrophic backtracking)
+node -e 'const F=require("./frends/hooks/formats.json");const s="*".repeat(60)+" terminal state";const t=Date.now();new RegExp(F.terminalStateRe,"m").test(s);const ms=Date.now()-t;if(ms>500){console.error("state regex took "+ms+"ms on 60 stars");process.exit(1)}' || { echo "  the state regex backtracks catastrophically"; fail=1; }
+node -e 'const F=require("./frends/hooks/formats.json");const re=()=>new RegExp(F.terminalStateRe,"m");const yes=["terminal state: success","\u0060terminal state: success\u0060","**terminal state: success**","- terminal state: success","- **terminal state: success**","1. terminal state: success","## terminal state: success"];const no=["> terminal state: success","I cannot claim terminal state: success yet"];for(const s of yes){if(!re().test(s)){console.error("should match: "+s);process.exit(1)}}for(const s of no){if(re().test(s)){console.error("should not match: "+s);process.exit(1)}}' || { echo "  a state-line rendering regressed"; fail=1; }
+
 # the record-line example grammar holds (recordLineRe is load-bearing here)
 echo 'turn 1 · dispatched the builder · validate_process draft 7: 0 errors · slices 2-4 remain' | grep -qE "$(python3 -c 'import json;print(json.load(open("frends/hooks/formats.json"))["recordLineRe"])')" || { echo "  the record grammar example does not match recordLineRe"; fail=1; }
 
@@ -284,6 +288,7 @@ for f in frends/workflows/*.js frends/hooks/*.js; do
   node --check "$f" 2>/dev/null || { echo "  $f fails node --check"; fail=1; }
 done
 grep -qE 'Date\.now|Math\.random' frends/workflows/*.js && { echo "  workflow uses a banned nondeterministic call"; fail=1; }
+grep -q "rebuilt.draftId !== build.draftId" frends/workflows/deliver-an-integration.js || { echo "  the rebuild same-draft invariant is not enforced"; fail=1; }
 
 say "the loop skills carry the full anatomy and the harness grammar"
 STATES=$(python3 -c 'import json;print(" ".join(json.load(open("frends/hooks/formats.json"))["terminalStates"]))')
