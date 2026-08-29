@@ -14,7 +14,8 @@ say "no em dashes"
 grep -rn --include=*.md --include=*.js --include=*.json -e '—' -e ' – ' . | grep -v '^./.git/' && fail=1
 
 say "the capability guard is byte-identical in every skill"
-n=$(for f in frends/skills/*/SKILL.md; do awk '/^## Check the session/{p=1;c=0} p{print; c++} c==3{exit}' "$f" | shasum; done | sort -u | wc -l | tr -d ' ')
+# the harness skill calls no tenant tool, so it carries no guard; excluded by design
+n=$(for f in frends/skills/*/SKILL.md; do [[ "$f" == */skills/harness/* ]] && continue; awk '/^## Check the session/{p=1;c=0} p{print; c++} c==3{exit}' "$f" | shasum; done | sort -u | wc -l | tr -d ' ')
 [ "$n" = 1 ] || { echo "  $n different guard texts"; fail=1; }
 
 say "every tool name in the skills and the agent is a served tool"
@@ -44,6 +45,144 @@ for j in '{}' 'not json' \
   echo "$out" | grep -q SECRETVALUE && { echo "  value echoed for: $j"; fail=1; }
   echo "$j" | grep -q '"l":' && { echo "$out" | grep -q "and 2 more" || { echo "  omitted parameter names not counted"; fail=1; }; }
 done
+
+
+say "the harness gates fire, pass, and fail open (fixtures)"
+FIX="scripts/fixtures"
+mkrun() { # $1 = temp dir; creates an open run with an empty record
+  mkdir -p "$1/.frends/runs"
+  printf 'loop: build-loop\nrecord: runs/r.md\n' > "$1/.frends/current-run"
+  : > "$1/.frends/runs/r.md"
+}
+stopgate() { node frends/hooks/stop-gate.js; }
+
+d=$(mktemp -d)
+# no run open: silent allow
+out=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: success"}' "$d" | stopgate)
+[ -z "$out" ] || { echo "  stop-gate: expected silence with no run open"; fail=1; }
+
+# success with mutate-then-validate evt lines: allow, ledger written, run closed
+mkrun "$d"
+printf 'evt · process_add_task · mutate · draft 7 · ok\nevt · validate_process · validate · draft 7 · errors: 0\n' >> "$d/.frends/runs/r.md"
+out=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: success"}' "$d" | stopgate)
+echo "$out" | grep -q '"decision"' && { echo "  stop-gate: blocked a valid success"; fail=1; }
+grep -q '\*\*success\*\*' "$d/.frends/ledger.md" || { echo "  stop-gate: no ledger line on success"; fail=1; }
+[ -f "$d/.frends/current-run" ] && { echo "  stop-gate: run not closed on success"; fail=1; }
+
+# success with validate-then-mutate evt lines: block, run stays open
+mkrun "$d"
+printf 'evt · validate_process · validate · draft 7 · errors: 0\nevt · process_add_task · mutate · draft 7 · ok\n' >> "$d/.frends/runs/r.md"
+out=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: success"}' "$d" | stopgate)
+echo "$out" | grep -q '"decision":"block"' || { echo "  stop-gate: did not block an unvalidated success"; fail=1; }
+echo "$out" | grep -q 'GATE RESULT ONLY' || { echo "  stop-gate: block reason lacks the banner"; fail=1; }
+[ -f "$d/.frends/current-run" ] || { echo "  stop-gate: closed a blocked run"; fail=1; }
+
+# the same claim with stop_hook_active true: never blocks twice
+out=$(printf '{"cwd":"%s","stop_hook_active":true,"last_assistant_message":"terminal state: success"}' "$d" | stopgate)
+echo "$out" | grep -q '"decision"' && { echo "  stop-gate: blocked twice"; fail=1; }
+
+# a non-success state closes the run honestly
+out=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: blocked"}' "$d" | stopgate)
+grep -q '\*\*blocked\*\*' "$d/.frends/ledger.md" || { echo "  stop-gate: no ledger line for blocked"; fail=1; }
+[ -f "$d/.frends/current-run" ] && { echo "  stop-gate: run not closed on blocked"; fail=1; }
+
+# transcript fallback, both orders (empty record)
+mkrun "$d"
+out=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: success","transcript_path":"%s"}' "$d" "$PWD/$FIX/transcript-mutate-then-validate.jsonl" | stopgate)
+echo "$out" | grep -q '"decision"' && { echo "  stop-gate: blocked the good transcript order"; fail=1; }
+mkrun "$d"
+out=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: success","transcript_path":"%s"}' "$d" "$PWD/$FIX/transcript-validate-then-mutate.jsonl" | stopgate)
+echo "$out" | grep -q '"decision":"block"' || { echo "  stop-gate: missed the bad transcript order"; fail=1; }
+
+# missing transcript and empty record: allow with the named non-check
+mkrun "$d"
+out=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: success","transcript_path":"%s/absent.jsonl"}' "$d" "$d" | stopgate)
+echo "$out" | grep -q 'nothing was checked' || { echo "  stop-gate: missing evidence not named"; fail=1; }
+
+# garbage stdin: fail open
+out=$(echo 'not json' | stopgate); [ -z "$out" ] || { echo "  stop-gate: noisy on garbage"; fail=1; }
+
+# mutation: a corrupted formats.json must make the gate fail OPEN, proving the harness can fail
+cp frends/hooks/formats.json "$d/formats.bak"
+echo 'broken' > frends/hooks/formats.json
+mkrun "$d"
+printf 'evt · validate_process · validate · draft 7 · errors: 0\nevt · process_add_task · mutate · draft 7 · ok\n' >> "$d/.frends/runs/r.md"
+out=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: success"}' "$d" | stopgate)
+mv "$d/formats.bak" frends/hooks/formats.json
+echo "$out" | grep -q '"decision"' && { echo "  stop-gate: blocked while broken (must fail open)"; fail=1; }
+
+say "the verdict gate bounces a malformed report once and passes a good one"
+vgate() { node frends/hooks/reviewer-verdict-gate.js; }
+json_msg() { python3 -c 'import json,sys; print(json.dumps({"agent_type":sys.argv[1],"last_assistant_message":open(sys.argv[2]).read()}))' "$1" "$2"; }
+out=$(json_msg "frends:draft-reviewer" "$FIX/verdict-good.txt" | vgate)
+[ -z "$out" ] || { echo "  verdict-gate: bounced a good verdict"; fail=1; }
+out=$(json_msg "frends:draft-reviewer" "$FIX/verdict-missing-heading.txt" | vgate)
+echo "$out" | grep -q '"decision":"block"' || { echo "  verdict-gate: passed a verdict without Not verified"; fail=1; }
+out=$(json_msg "frends:process-builder" "$FIX/builder-report-good.txt" | vgate)
+[ -z "$out" ] || { echo "  verdict-gate: bounced a good builder report"; fail=1; }
+out=$(printf '{"agent_type":"frends:draft-reviewer","stop_hook_active":true,"last_assistant_message":"junk"}' | vgate)
+[ -z "$out" ] || { echo "  verdict-gate: blocked twice"; fail=1; }
+out=$(printf '{"agent_type":"frends:unknown-agent","last_assistant_message":"junk"}' | vgate)
+[ -z "$out" ] || { echo "  verdict-gate: noisy on an unmatched agent"; fail=1; }
+
+say "the recorder writes names and counts, never values, and only into an open run"
+rec() { node frends/hooks/record-tool-event.js; }
+mkrun "$d"
+printf '{"cwd":"%s","tool_name":"mcp__plugin_frends_frends__process_add_task","tool_input":{"draftId":7,"parameters":{"apiKey":"SECRETVALUE"}}}' "$d" | rec
+printf '{"cwd":"%s","tool_name":"mcp__plugin_frends_frends__validate_process","tool_input":{"draftId":7},"tool_response":{"errors":[]}}' "$d" | rec
+printf '{"cwd":"%s","tool_name":"mcp__plugin_frends_frends__validate_process","tool_input":{"draftId":7},"tool_response":"unparseable"}' "$d" | rec
+printf '{"cwd":"%s","tool_name":"mcp__plugin_frends_frends__start_process","tool_input":{"deploymentId":9,"triggerParameters":{"k":"SECRETVALUE"}}}' "$d" | rec
+grep -q 'SECRETVALUE' "$d/.frends/runs/r.md" && { echo "  recorder: wrote a value"; fail=1; }
+grep -q 'evt · process_add_task · mutate · draft 7 · ok' "$d/.frends/runs/r.md" || { echo "  recorder: missing the mutate line"; fail=1; }
+grep -q 'evt · validate_process · validate · draft 7 · errors: 0' "$d/.frends/runs/r.md" || { echo "  recorder: missing errors: 0"; fail=1; }
+grep -q 'evt · validate_process · validate · draft 7 · not parsed' "$d/.frends/runs/r.md" || { echo "  recorder: missing not parsed"; fail=1; }
+grep -q 'evt · start_process · leave-draft' "$d/.frends/runs/r.md" || { echo "  recorder: missing the leave-draft line"; fail=1; }
+d2=$(mktemp -d)
+printf '{"cwd":"%s","tool_name":"mcp__plugin_frends_frends__process_add_task","tool_input":{"draftId":7}}' "$d2" | rec
+[ -e "$d2/.frends" ] && { echo "  recorder: wrote without an open run"; fail=1; }
+find "$d" "$d2" -depth -delete 2>/dev/null || true
+
+say "hooks.json wires the gates as designed"
+python3 - <<'PY' || fail=1
+import json,sys
+d=json.load(open("frends/hooks/hooks.json"))["hooks"]
+assert "matcher" not in d["Stop"][0], "Stop must have no matcher"
+assert d["SubagentStop"][0]["matcher"] == "^frends:(draft-reviewer|process-builder)$"
+assert "record-tool-event" in d["PostToolUse"][0]["hooks"][0]["args"][0]
+PY
+
+say "the loop skills carry the full anatomy and the harness grammar"
+STATES=$(python3 -c 'import json;print(" ".join(json.load(open("frends/hooks/formats.json"))["terminalStates"]))')
+RECLIT=$(python3 -c 'import json;print(json.load(open("frends/hooks/formats.json"))["recordLineLiteral"])')
+for f in frends/skills/build-loop/SKILL.md frends/skills/fix-loop/SKILL.md frends/skills/deliver-loop/SKILL.md; do
+  for h in "## DONE when" "## ANTI-GAMING" "## TERMINAL STATES" "## SETUP" "## EVERY TURN" "## At DONE"; do
+    [ "$(grep -cF "$h" "$f")" = "1" ] || { echo "  $f: heading '$h' not exactly once"; fail=1; }
+  done
+  for st in "success" "clean no-op" "blocked" "approval-required" "exhausted" "stagnated"; do
+    echo "$STATES" | grep -qF "$st" || { echo "  formats.json lost state $st"; fail=1; }
+    grep -qF "**$st**" "$f" || { echo "  $f: terminal state $st not defined"; fail=1; }
+  done
+  grep -qF "Hard cap:" "$f" || { echo "  $f: no hard cap"; fail=1; }
+  grep -qF "$RECLIT" "$f" || { echo "  $f: record grammar literal missing"; fail=1; }
+  grep -qF "RUBRIC FREEZE" "$f" || { echo "  $f: no rubric freeze"; fail=1; }
+  grep -q 'harness` skill before turn 1' "$f" || { echo "  $f: does not read the harness skill first"; fail=1; }
+  grep -qF "no open decisions this run" "$f" || { echo "  $f: no open-decisions contract"; fail=1; }
+done
+
+say "the agents preload the harness and the builder cannot leave the draft"
+for a in process-builder draft-reviewer failure-diagnoser; do
+  f="frends/agents/$a.md"
+  [ -f "$f" ] || { echo "  $f missing"; fail=1; continue; }
+  grep -qE '^  - harness$' "$f" || { echo "  $f: harness not preloaded"; fail=1; }
+  grep -qE '^maxTurns: [0-9]+$' "$f" || { echo "  $f: no maxTurns"; fail=1; }
+done
+TOOLS_LINE=$(grep '^tools:' frends/agents/process-builder.md)
+for gated in create_process_from_draft deploy_process start_process import_task create_environment_variable; do
+  echo "$TOOLS_LINE" | grep -qF "__$gated" && { echo "  process-builder is granted the gated tool $gated"; fail=1; }
+done
+echo "$TOOLS_LINE" | grep -qE '(^|[ ,])Agent([ ,]|$)' && { echo "  process-builder can spawn agents"; fail=1; }
+DIAG_LINE=$(grep '^tools:' frends/agents/failure-diagnoser.md)
+echo "$DIAG_LINE" | grep -qE 'process_add|process_edit|process_remove|create_process_draft|process_set|process_batch' && { echo "  failure-diagnoser holds a mutating tool"; fail=1; }
 
 say "no internal paths or private tooling in public files"
 grep -rnE '/Users/|\.coord|claude-flow|Obsidian' frends README.md docs .out-of-scope CHANGELOG.md | grep -v '.claude-plugin' && fail=1
