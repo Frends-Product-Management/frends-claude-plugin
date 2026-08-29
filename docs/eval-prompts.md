@@ -39,6 +39,11 @@ The ambiguous rows are the ones that matter. They are pairs of skills whose terr
 | "The Frends tools give me a 401" | getting-connected | The connection itself is refused; nothing ran |
 | "My sync failed with a 401 from the ERP" | diagnose-failures | The connection works and a run exists; the 401 came from a Task inside it |
 | "We need a nightly sync, what do we need to decide?" | integration-planning | The requirements are open; process-patterns needs them known |
+| "Build this plan, it has acceptance criteria per Process" | build-loop | Criteria to freeze and several rounds expected; a single build pass has no record or review |
+| "The order sync keeps failing, fix it" | fix-loop | The person wants the fix built; diagnose-failures only explains |
+| "What went wrong with last night's run?" | diagnose-failures | Explanation wanted, not a fix; fix-loop starts only when the fix is asked for |
+| "/frends:deliver-loop with the confirmed plan" | deliver-loop | Invoked by name only; no description routes to it |
+| "Add a schedule trigger to this draft" | build-a-process | A one-shape edit needs no loop |
 
 ## Routing registry
 

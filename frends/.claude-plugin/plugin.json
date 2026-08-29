@@ -1,6 +1,6 @@
 {
   "name": "frends",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Work with your Frends tenant through the Frends Platform MCP: find and inspect Processes, diagnose failures, plan integrations, build and review drafts, and run Processes, with a permission prompt before anything leaves the draft stage.",
   "author": {
     "name": "Frends"

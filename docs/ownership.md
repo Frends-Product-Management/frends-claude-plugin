@@ -12,6 +12,8 @@ For maintainers. One statement has one owner. Before adding a sentence to a skil
 | Checks validation cannot make and no guide carries | Plugin judgement | `build-a-process` (Checks validation cannot make), `review-a-draft` (axis one, after the guide) |
 | How to interview, plan, synthesize and hand off | Plugin methodology | `integration-planning` |
 | How to connect and what a failed connection means | Plugin, because no guide covers it | `getting-connected`, README |
+| The loop protocol: the turn shape, the six terminal states, the stop rules, maker and reviewer roles, the record and ledger grammar | Plugin policy | The `harness` skill and its `references/CRITERIA.md`, the three loop skills, `frends/hooks/formats.json` |
+| What a gate proves, and where the run record lives | Plugin policy | The `harness` skill, the hooks under `frends/hooks/`, `.frends/` in the user's project |
 | Which skill answers which prompt | The skill descriptions, tested by `docs/eval-prompts.md` | Nowhere else; the session-start hook carries no routing table |
 
 When a plugin-owned check turns out to be in a guide after a platform release, the plugin line is deleted in the next release and the changelog says which guide now owns it.

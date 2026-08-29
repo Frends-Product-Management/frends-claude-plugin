@@ -18,3 +18,7 @@ The escape hatches already exist:
 ## Prior requests
 
 None yet.
+
+## The loop harness does not reopen this
+
+The 0.7.0 loops were asked for as a full build-and-deliver harness, and they stop at the same line. Every loop ends at `approval-required` when promotion, deployment or a run is the next step, the builder agent is not granted those five tools at all, and the run record's tool events prove none was called. A loop automates the turns, never the decision.

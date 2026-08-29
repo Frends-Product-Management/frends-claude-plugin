@@ -1,5 +1,22 @@
 # frends
 
+## 0.7.0
+
+### Minor Changes
+
+- Add the loop harness. The `harness` skill carries the working rules every loop and loop agent runs under: one bounded change per turn, done as observable evidence, six named terminal states, a hard cap plus a no-progress stop, maker separated from reviewer with a neutral brief, one record line per turn under `.frends/` in the project, and the list of what is never written down. Its `references/CRITERIA.md` is the rubric a reviewer scores a run against, Part A for process integrity and Part F for Frends draft integrity; it ships inside the plugin so a session cannot edit its own exam.
+
+- Add three loop skills. `build-loop` takes a request or a confirmed plan to a validated draft with a frozen rubric and an independent review before success. `fix-loop` takes a failing deployed Process from ranked diagnosis through the person's chosen cause to a validated edit draft, and ends at approval-required by design because proving a fix needs a promotion and a run. `deliver-loop`, invoked by name only, runs a confirmed plan Process by Process with two reviews each and turns an unconfirmed plan away at the door.
+
+- Add two agents and adjust one. `process-builder` builds one draft per dispatch, is not granted the five tools that leave the draft stage, fixes validation errors at most five rounds and ends its report with the line the verdict gate checks. `failure-diagnoser` is read-only and returns ranked causes with run evidence, no fix. `draft-reviewer` now preloads the harness, reports in the checked verdict shape, and names a leading brief as a finding.
+
+- Add three gate hooks driven by one `formats.json`. A PostToolUse recorder appends every draft mutation and validation to the open run record, names and counts only, never values. A Stop gate blocks, once, a `terminal state: success` whose record shows the last validation before the last change, closes finished runs and writes the ledger line. A SubagentStop gate bounces, once, a builder report or reviewer verdict missing its required sections. All three are no-ops without an open run, never block twice, and fail open on their own errors; `scripts/check.sh` proves each fires, passes and fails open from checked-in fixtures, including a corrupted `formats.json`.
+
+- Add the `deliver-an-integration` workflow, the deliver-loop's non-interactive form: one builder per planned Process, two reviewer verdicts per draft, a per-Process table back, promotion never taken. Syntax-checked in the release checks; its first live run is the user's test.
+
+- `build-a-process` now offers `build-loop` when a plan carries acceptance criteria or several Processes, `diagnose-failures` offers `fix-loop` when the person wants the fix built, and `review-a-draft` states the neutral-brief rule and quotes verdicts in the checked shape.
+
+
 ## 0.6.0
 
 ### Minor Changes

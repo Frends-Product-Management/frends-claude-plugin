@@ -2,8 +2,9 @@
 
 Work with your Frends tenant from Claude Code: find and inspect Processes, diagnose failed
 runs, plan and build integrations, review the draft, and run a Process on your say-so. The
-plugin bundles the tenant connector, 8 skills, a read-only review agent, and a permission
-hook that asks you before anything leaves the draft stage.
+plugin bundles the tenant connector, 12 skills, three agents, a bounded loop harness with
+its gates, a delivery workflow, and a permission hook that asks you before anything leaves
+the draft stage.
 
 The Frends Platform MCP server serves its own guides for the tool mechanics. The skills here
 route to those guides and add what they do not carry: the order to work in, where the work
@@ -169,6 +170,10 @@ version also decides which tools exist. Check the API Policy and the grant in th
 | `run-a-process` | Running a deployed Process after the confirmation the served guide requires |
 | `process-patterns` | Choosing the right Process shape before building, with a reference per shape |
 | `integration-planning` | Interviewing for requirements, or synthesizing an earlier conversation, and writing the integration plan before any building |
+| `harness` | The working rules every loop and agent runs under: the six ways a run ends, the record grammar, who reviews whom, and what is never written down |
+| `build-loop` | A bounded build loop from a request or a confirmed plan to a validated draft, with a run record and an independent review before success |
+| `fix-loop` | A bounded fix loop for a Process failing in an Environment, from ranked diagnosis through the person's chosen cause to a validated edit draft |
+| `deliver-loop` | The delivery loop over a confirmed plan, two independent reviews per Process; invoked by name only |
 
 Plans written by `integration-planning` are aligned with the Frends Integration
 Requirements Document (FIRD), the format used to specify a Frends integration for
@@ -176,11 +181,38 @@ delivery.
 
 | Other parts | What they do |
 |---|---|
-| `hooks/` | The permission prompt before the five tools above, and three lines of context at session start |
-| `agents/draft-reviewer` | A read-only agent that reads one draft snapshot on one review axis; `review-a-draft` dispatches it twice |
+| `hooks/` | The permission prompt before the five tools above, the loop gates below, and context at session start |
+| `agents/process-builder` | Builds one draft per dispatch up to a passing validation; not granted the five tools that leave the draft stage |
+| `agents/draft-reviewer` | A read-only agent that reads one draft snapshot on one review axis and returns findings in a checked shape |
+| `agents/failure-diagnoser` | Read-only; returns ranked causes for a failing Process with run evidence, proposes no fix |
+| `workflows/deliver-an-integration.js` | The deliver-loop's non-interactive form, run as `/frends:deliver-an-integration` |
+| `.frends/` in your project | Run records, the run ledger and your accepted decisions; created only after a loop tells you once |
 | `docs/ownership.md` | Which statements the plugin may own, and which belong to the server's guides |
 | `docs/served-tool-names.txt` | The tool names the server serves, which the checks hold the skills to |
 | `scripts/check.sh` | The release checks |
+
+## The harness
+
+The three loop skills run the same protocol, written in the `harness` skill: one bounded
+change per turn, verified by `validate_process`, recorded in a run record under `.frends/`
+in your project, and ended in one of six named states, `success`, `clean no-op`, `blocked`,
+`approval-required`, `exhausted` or `stagnated`. A failure is named, never dressed up as
+success. The one who builds a draft never judges it: the builder agent reports, a reviewer
+agent verdicts, and promoting, deploying, running, importing a Task package and creating an
+environment variable stay your decisions in every loop.
+
+Three hooks gate the protocol mechanically. A recorder appends every draft mutation and
+validation to the open run record. A Stop gate refuses, once, a run that claims `terminal
+state: success` when the record shows the last validation ran before the last change, and
+writes the ledger line when a run closes. A verdict gate bounces, once, an agent report
+that is missing its required sections. Every gate message opens with the same sentence:
+"GATE RESULT ONLY, presence and order, not evidence of quality." A gate can fail work;
+only the reviewer and you can pass it. The gates fail open on their own errors and say so.
+
+Self-tests you can run in your own session: open a loop run, make one draft change, then
+claim `terminal state: success` without validating, and the stop must be blocked exactly
+once with that banner. Ask the reviewer agent for a verdict and delete its `Count:` line
+from the brief's required shape, and the report must bounce exactly once.
 
 ## Is it working?
 
@@ -207,11 +239,14 @@ What you should see when each skill is doing its job. Every line is something yo
 `scripts/check.sh` runs the release checks: the manifests parse, the capability guard is
 byte-identical across skills, every tool name in a skill or the agent is in
 `docs/served-tool-names.txt`, the permission matcher gates exactly the five tools, the hook
-answers `ask` on every input and never echoes a value, and no internal path reaches a public
-file. Run it before every release. What it cannot check, and what was not exercised before
-0.6.0: the prompt appearing in a live Claude Code session, its behaviour in bypass mode and
-with hooks disabled, the agent's tool allowlist, and Node on Windows. Treat those as claims to
-verify in your own session, with the self-test above.
+answers `ask` on every input and never echoes a value, the loop gates fire, pass and fail
+open against checked-in fixtures, the loop skills carry the full anatomy, the agents cannot
+leave the draft stage, and no internal path reaches a public file. Run it before every
+release. What it cannot check, and what was not exercised before 0.7.0: the prompt appearing
+in a live Claude Code session, its behaviour in bypass mode and with hooks disabled, the
+agents' tool allowlists and whether their `skills` preload loads the harness, the live Stop
+and SubagentStop behaviour in a real session, the workflow's first run, and Node on Windows.
+Treat those as claims to verify in your own session, with the self-tests above.
 
 Every content change must bump `version` in `frends/.claude-plugin/plugin.json`. Claude
 clients cache installed plugins by version, so a change shipped without a bump will not
