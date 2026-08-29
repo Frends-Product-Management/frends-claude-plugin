@@ -52,10 +52,10 @@ One turn is one Process slot moving one round:
 4. Findings go back to the builder verbatim, at most 3 rounds for the Process; a finding the person accepts instead is written into `.frends/decisions.md` in their words.
 5. Record: append `turn N · action · evidence · remaining`; reflections on failed verifies as in the harness skill.
 
-The non-interactive form of this loop is the `/frends:deliver-an-integration` workflow; use it when the person wants the fan-out without the per-round conversation.
+The non-interactive form of this loop is the `/frends:deliver-an-integration` workflow; use it when the person wants the fan-out without the per-round conversation. The workflow keeps no `.frends/` run record; the table it returns is its evidence, and this loop is the recorded form.
 
 ## At DONE
 
-Write `terminal state: <name>` with one sentence of evidence. Hand off the per-Process table (draft, verdicts, not-verified items), ask the promotion question in the decision shape, and end with open decisions in that shape or the exact line "no open decisions this run". The ledger line is the Stop hook's job.
+Write `terminal state: <name>` with one sentence of evidence. Hand off the per-Process table (draft, verdicts, not-verified items), ask the promotion question in the decision shape, and end with open decisions in that shape or the exact line "no open decisions this run". The ledger line in `.frends/ledger.md` and the record's closing `terminal state:` line are written by the plugin's Stop hook, never by you.
 
 Uses (verify against the session's tool list): `get_overview`, `validate_process` and the draft tools through the `frends:process-builder` and `frends:draft-reviewer` agents.

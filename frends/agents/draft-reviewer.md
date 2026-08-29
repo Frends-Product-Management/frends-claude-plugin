@@ -27,4 +27,6 @@ Return exactly this shape, because a gate checks it:
 Count: <n> findings, worst: <one line, or none>
 ```
 
+A dispatch that requires structured output gets the same content through it; the shape above is for text reports.
+
 Do not rank against the other axis, do not propose to fix anything yourself, and never quote a value that looks like a secret; write the reference in its place.

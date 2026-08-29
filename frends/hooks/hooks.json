@@ -32,7 +32,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "^mcp__plugin_frends_frends__(validate_process|create_process_draft|process_add_[a-z_]+|process_edit_shape|process_remove_shape|process_remove_connection|process_set_error_handler|process_batch_mutate|create_process_from_draft|deploy_process|start_process|import_task|create_environment_variable)$",
+        "matcher": "^mcp__plugin_frends_frends__(validate_process|create_process_draft|process_add_[a-z_]+|process_edit_shape|process_remove_shape|process_remove_connection|process_set_error_handler|process_batch_mutate|process_auto_layout|create_process_from_draft|deploy_process|start_process|import_task|create_environment_variable)$",
         "hooks": [
           {
             "type": "command",

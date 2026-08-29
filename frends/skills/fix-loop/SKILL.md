@@ -56,6 +56,6 @@ Repeat or stop under the two-tier stop.
 
 ## At DONE
 
-Write `terminal state: <name>` with one sentence of evidence. Ask the promote-and-prove question in the decision shape, and end with open decisions in that shape or the exact line "no open decisions this run". The ledger line is the Stop hook's job.
+Write `terminal state: <name>` with one sentence of evidence. Ask the promote-and-prove question in the decision shape, and end with open decisions in that shape or the exact line "no open decisions this run". The ledger line in `.frends/ledger.md` and the record's closing `terminal state:` line are written by the plugin's Stop hook, never by you.
 
 Uses (verify against the session's tool list): `get_overview`, `get_process_instances`, `get_process_instance_details`, `create_process_draft`, `validate_process` through the `frends:failure-diagnoser`, `frends:process-builder` and `frends:draft-reviewer` agents.

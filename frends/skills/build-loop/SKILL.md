@@ -54,6 +54,6 @@ Repeat or stop under the two-tier stop: the hard cap, or two verification passes
 
 ## At DONE
 
-Write `terminal state: <name>` with one sentence of evidence in the final message. Ask the promotion question in the decision shape, and end with the run's open decisions in that shape or the exact line "no open decisions this run". The ledger line in `.frends/ledger.md` is written by the plugin's Stop hook, never by you.
+Write `terminal state: <name>` with one sentence of evidence in the final message. Ask the promotion question in the decision shape, and end with the run's open decisions in that shape or the exact line "no open decisions this run". The ledger line in `.frends/ledger.md` and the record's closing `terminal state:` line are written by the plugin's Stop hook, never by you.
 
 Uses (verify against the session's tool list): `get_overview`, `validate_process` and the draft tools through the `frends:process-builder` and `frends:draft-reviewer` agents. Optional: `list_process_drafts` for the clean no-op check.

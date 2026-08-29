@@ -68,6 +68,21 @@ out=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: success"}' "
 echo "$out" | grep -q '"decision"' && { echo "  stop-gate: blocked a valid success"; fail=1; }
 grep -q '\*\*success\*\*' "$d/.frends/ledger.md" || { echo "  stop-gate: no ledger line on success"; fail=1; }
 [ -f "$d/.frends/current-run" ] && { echo "  stop-gate: run not closed on success"; fail=1; }
+grep -q '^terminal state: success' "$d/.frends/runs/r.md" || { echo "  stop-gate: state line not persisted into the record"; fail=1; }
+
+# the state named only in prose, not on its own line: no state, no close, no block
+mkrun "$d"
+out=$(printf '{"cwd":"%s","last_assistant_message":"I cannot claim terminal state: success yet."}' "$d" | stopgate)
+[ -z "$out" ] || { echo "  stop-gate: acted on a prose mention of the state"; fail=1; }
+[ -f "$d/.frends/current-run" ] || { echo "  stop-gate: closed a run on a prose mention"; fail=1; }
+
+# per-draft order: draft 8 changed after draft 7 validated; success must block
+mkrun "$d"
+printf 'evt · validate_process · validate · draft 7 · errors: 0\nevt · process_add_task · mutate · draft 7 · ok\nevt · validate_process · validate · draft 7 · errors: 0\nevt · process_add_task · mutate · draft 8 · ok\n' >> "$d/.frends/runs/r.md"
+out=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: success"}' "$d" | stopgate)
+echo "$out" | grep -q '"decision":"block"' || { echo "  stop-gate: missed the unvalidated second draft"; fail=1; }
+echo "$out" | grep -q 'draft 8' || { echo "  stop-gate: block reason does not name the stale draft"; fail=1; }
+rm "$d/.frends/current-run" 2>/dev/null || true
 
 # success with validate-then-mutate evt lines: block, run stays open
 mkrun "$d"
@@ -77,11 +92,13 @@ echo "$out" | grep -q '"decision":"block"' || { echo "  stop-gate: did not block
 echo "$out" | grep -q 'GATE RESULT ONLY' || { echo "  stop-gate: block reason lacks the banner"; fail=1; }
 [ -f "$d/.frends/current-run" ] || { echo "  stop-gate: closed a blocked run"; fail=1; }
 
-# the same claim with stop_hook_active true: never blocks twice
+# the same claim with stop_hook_active true: never blocks twice, and the run closes
 out=$(printf '{"cwd":"%s","stop_hook_active":true,"last_assistant_message":"terminal state: success"}' "$d" | stopgate)
 echo "$out" | grep -q '"decision"' && { echo "  stop-gate: blocked twice"; fail=1; }
+[ -f "$d/.frends/current-run" ] && { echo "  stop-gate: run left open after the continuation stop"; fail=1; }
 
 # a non-success state closes the run honestly
+mkrun "$d"
 out=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: blocked"}' "$d" | stopgate)
 grep -q '\*\*blocked\*\*' "$d/.frends/ledger.md" || { echo "  stop-gate: no ledger line for blocked"; fail=1; }
 [ -f "$d/.frends/current-run" ] && { echo "  stop-gate: run not closed on blocked"; fail=1; }
@@ -96,8 +113,9 @@ echo "$out" | grep -q '"decision":"block"' || { echo "  stop-gate: missed the ba
 
 # missing transcript and empty record: allow with the named non-check
 mkrun "$d"
-out=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: success","transcript_path":"%s/absent.jsonl"}' "$d" "$d" | stopgate)
+out=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: success","transcript_path":"%s/absent.jsonl"}' "$d" "$d" | stopgate 2>&1)
 echo "$out" | grep -q 'nothing was checked' || { echo "  stop-gate: missing evidence not named"; fail=1; }
+echo "$out" | grep -q '"decision"' && { echo "  stop-gate: blocked with no evidence source"; fail=1; }
 
 # garbage stdin: fail open
 out=$(echo 'not json' | stopgate); [ -z "$out" ] || { echo "  stop-gate: noisy on garbage"; fail=1; }
@@ -107,9 +125,22 @@ cp frends/hooks/formats.json "$d/formats.bak"
 echo 'broken' > frends/hooks/formats.json
 mkrun "$d"
 printf 'evt · validate_process · validate · draft 7 · errors: 0\nevt · process_add_task · mutate · draft 7 · ok\n' >> "$d/.frends/runs/r.md"
-out=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: success"}' "$d" | stopgate)
+out=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: success"}' "$d" | stopgate 2>/dev/null)
+vout=$(printf '{"agent_type":"frends:draft-reviewer","last_assistant_message":"junk"}' | node frends/hooks/reviewer-verdict-gate.js 2>/dev/null)
+printf '{"cwd":"%s","tool_name":"mcp__plugin_frends_frends__process_add_expression","tool_input":{"draftId":7}}' "$d" | node frends/hooks/record-tool-event.js 2>/dev/null
+nerr=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: success"}' "$d" | stopgate 2>&1 >/dev/null)
 mv "$d/formats.bak" frends/hooks/formats.json
 echo "$out" | grep -q '"decision"' && { echo "  stop-gate: blocked while broken (must fail open)"; fail=1; }
+echo "$vout" | grep -q '"decision"' && { echo "  verdict-gate: blocked while broken (must fail open)"; fail=1; }
+grep -q 'evt · process_add_expression' "$d/.frends/runs/r.md" && { echo "  recorder: wrote while broken"; fail=1; }
+echo "$nerr" | grep -q 'formats.json unreadable' || { echo "  stop-gate: broken gate did not say so"; fail=1; }
+
+# a current-run pointer that escapes .frends is treated as no run at all
+mkdir -p "$d/.frends"; printf 'loop: build-loop\nrecord: ../../escape.md\n' > "$d/.frends/current-run"
+printf '{"cwd":"%s","tool_name":"mcp__plugin_frends_frends__process_add_task","tool_input":{"draftId":7}}' "$d" | node frends/hooks/record-tool-event.js
+[ -e "$d/../../escape.md" ] && { echo "  recorder: followed a pointer out of .frends"; fail=1; }
+[ -e "$d/escape.md" ] && { echo "  recorder: followed a pointer out of .frends (one level)"; fail=1; }
+rm "$d/.frends/current-run"
 
 say "the verdict gate bounces a malformed report once and passes a good one"
 vgate() { node frends/hooks/reviewer-verdict-gate.js; }
@@ -124,6 +155,9 @@ out=$(printf '{"agent_type":"frends:draft-reviewer","stop_hook_active":true,"las
 [ -z "$out" ] || { echo "  verdict-gate: blocked twice"; fail=1; }
 out=$(printf '{"agent_type":"frends:unknown-agent","last_assistant_message":"junk"}' | vgate)
 [ -z "$out" ] || { echo "  verdict-gate: noisy on an unmatched agent"; fail=1; }
+inline=$(python3 -c 'import json;print(json.dumps({"agent_type":"frends:draft-reviewer","last_assistant_message":"the ## Findings: conventions heading and the ## Not verified part are discussed inline\nCount: 1 finding, worst: x"}))')
+out=$(echo "$inline" | vgate)
+echo "$out" | grep -q '"decision":"block"' || { echo "  verdict-gate: accepted headings mentioned in prose"; fail=1; }
 
 say "the recorder writes names and counts, never values, and only into an open run"
 rec() { node frends/hooks/record-tool-event.js; }
@@ -137,6 +171,10 @@ grep -q 'evt · process_add_task · mutate · draft 7 · ok' "$d/.frends/runs/r.
 grep -q 'evt · validate_process · validate · draft 7 · errors: 0' "$d/.frends/runs/r.md" || { echo "  recorder: missing errors: 0"; fail=1; }
 grep -q 'evt · validate_process · validate · draft 7 · not parsed' "$d/.frends/runs/r.md" || { echo "  recorder: missing not parsed"; fail=1; }
 grep -q 'evt · start_process · leave-draft' "$d/.frends/runs/r.md" || { echo "  recorder: missing the leave-draft line"; fail=1; }
+printf '{"cwd":"%s","tool_name":"mcp__plugin_frends_frends__process_add_task","tool_input":{"draftCredential":"SECRETVALUE2","draftId":7}}' "$d" | rec
+grep -q 'SECRETVALUE2' "$d/.frends/runs/r.md" && { echo "  recorder: leaked a value from a draft-named key"; fail=1; }
+printf '{"cwd":"%s","tool_name":"mcp__plugin_frends_frends__process_auto_layout","tool_input":{"draftId":7}}' "$d" | rec
+grep -q 'evt · process_auto_layout · layout · draft 7 · ok' "$d/.frends/runs/r.md" || { echo "  recorder: missing the layout line"; fail=1; }
 d2=$(mktemp -d)
 printf '{"cwd":"%s","tool_name":"mcp__plugin_frends_frends__process_add_task","tool_input":{"draftId":7}}' "$d2" | rec
 [ -e "$d2/.frends" ] && { echo "  recorder: wrote without an open run"; fail=1; }
@@ -150,6 +188,12 @@ assert "matcher" not in d["Stop"][0], "Stop must have no matcher"
 assert d["SubagentStop"][0]["matcher"] == "^frends:(draft-reviewer|process-builder)$"
 assert "record-tool-event" in d["PostToolUse"][0]["hooks"][0]["args"][0]
 PY
+
+say "the workflow and the hooks parse as Node scripts"
+for f in frends/workflows/*.js frends/hooks/*.js; do
+  node --check "$f" 2>/dev/null || { echo "  $f fails node --check"; fail=1; }
+done
+grep -qE 'Date\.now|Math\.random' frends/workflows/*.js && { echo "  workflow uses a banned nondeterministic call"; fail=1; }
 
 say "the loop skills carry the full anatomy and the harness grammar"
 STATES=$(python3 -c 'import json;print(" ".join(json.load(open("frends/hooks/formats.json"))["terminalStates"]))')

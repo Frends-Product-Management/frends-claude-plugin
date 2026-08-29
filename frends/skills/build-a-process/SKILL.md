@@ -1,6 +1,6 @@
 ---
 name: build-a-process
-description: Build or edit a Frends integration Process as a draft, up to a passing validation. Use when someone wants to create, scaffold, draft or change an integration, or add a trigger or a Task to a Process. Do not use to run a Process, to review a finished draft, or to choose between Process shapes that are still undecided.
+description: Build or edit a Frends integration Process as a draft, up to a passing validation. Use when someone wants to create, scaffold, draft or change an integration, or add a trigger or a Task to a Process. Do not use to run a Process, to review a finished draft, to choose between Process shapes that are still undecided, to build a confirmed plan that carries acceptance criteria or several Processes, which is the build loop, or to fix a Process failing in an Environment, which is the fix loop.
 ---
 
 # Building a Process

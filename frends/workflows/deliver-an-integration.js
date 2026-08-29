@@ -1,9 +1,10 @@
 export const meta = {
   name: 'deliver-an-integration',
   description: 'Build every Process in a confirmed integration plan to a validated draft, review each twice, and hand back a table. Promotion is never taken.',
-  whenToUse: 'The non-interactive form of the deliver-loop skill: a confirmed plan in, per-Process validated and twice-reviewed drafts out. Pass the plan as args: { confirmationStatus, openQuestionsBlocking, processes: [{ name, planSection, criteria, patternReference }] }.',
+  whenToUse: 'The non-interactive form of the deliver-loop skill: a confirmed plan in, per-Process validated and twice-reviewed drafts out. Pass the integration-planning build handoff block as args, with its own keys: confirmation_status, open_questions, processes (name, mode, trigger, steps, acceptance_criteria, out_of_scope). This workflow keeps no .frends/ run record; the table it returns is its evidence.',
   phases: [
     { title: 'Build', detail: 'one builder agent per planned Process' },
+    { title: 'Snapshot', detail: 'an independent fetch of each draft structure' },
     { title: 'Review', detail: 'two reviewer verdicts per draft, conventions and plan' },
   ],
 }
@@ -37,29 +38,33 @@ const VERDICT_SCHEMA = {
   },
 }
 
+// args is the plan's own build handoff block, its keys as integration-planning writes them.
 const plan = args || {}
-if (plan.confirmationStatus !== 'confirmed') {
-  return { terminalState: 'blocked', reason: 'the plan is not confirmed; run integration-planning to confirmation first' }
+if (plan.confirmation_status !== 'confirmed') {
+  return { terminalState: 'blocked', reason: 'the plan is not confirmed; confirmation_status must be confirmed before any build starts' }
 }
-if (Array.isArray(plan.openQuestionsBlocking) && plan.openQuestionsBlocking.length > 0) {
-  return { terminalState: 'blocked', reason: 'blocking open questions are unanswered: ' + plan.openQuestionsBlocking.join('; ') }
+const blocking = (Array.isArray(plan.open_questions) ? plan.open_questions : []).filter((q) => q && q.blocking === true)
+if (blocking.length > 0) {
+  return { terminalState: 'blocked', reason: 'blocking open questions are unanswered: ' + blocking.map((q) => q.question).join('; ') }
 }
-const processes = Array.isArray(plan.processes) ? plan.processes.slice(0, 6) : []
+const allProcesses = Array.isArray(plan.processes) ? plan.processes : []
+const processes = allProcesses.slice(0, 6)
 if (processes.length === 0) {
   return { terminalState: 'clean no-op', reason: 'the plan names no Process to build' }
 }
-if (Array.isArray(plan.processes) && plan.processes.length > 6) {
-  log('the run caps at 6 Processes; ' + (plan.processes.length - 6) + ' left for the next run')
+if (allProcesses.length > 6) {
+  log('the run caps at 6 Processes; ' + (allProcesses.length - 6) + ' left for the next run')
 }
 
 const rows = await pipeline(
   processes,
-  (p, item, i) => agent(
-    'Build ONE Frends Process draft for the plan section below, following your own working rules. ' +
+  (p, item) => agent(
+    'Build ONE Frends Process draft for the plan entry below, following your own working rules. ' +
     'Stop at a validated draft; never promote, deploy, run or import anything.\n\n' +
-    'Process name: ' + item.name + '\n\nPlan section:\n' + item.planSection + '\n\n' +
-    'Frozen acceptance criteria (you may not edit these):\n' + (item.criteria || 'none given; build to the plan section') + '\n\n' +
-    'Pattern reference:\n' + (item.patternReference || 'none given; pick from the served process-authoring guide'),
+    'Plan entry (its acceptance_criteria are frozen; you may not edit them):\n' +
+    JSON.stringify(item, null, 2) +
+    (plan.error_policy ? '\n\nPlan error policy:\n' + JSON.stringify(plan.error_policy, null, 2) : '') +
+    (plan.mappings ? '\n\nField mappings:\n' + JSON.stringify(plan.mappings, null, 2) : ''),
     { agentType: 'frends:process-builder', label: 'build:' + item.name, phase: 'Build', schema: BUILD_SCHEMA },
   ),
   async (build, item) => {
@@ -67,26 +72,44 @@ const rows = await pipeline(
     if (build.lastValidate.errors !== 0 || !build.lastValidate.afterLastChange) {
       return { name: item.name, state: 'blocked', draftId: build.draftId, reason: 'validation not clean after the last change: ' + build.lastValidate.errors + ' errors', remaining: build.remaining }
     }
+    // The reviewer reads only what it is handed, so an independent agent, not the
+    // builder, fetches the frozen snapshot both verdicts are read from.
+    const snapshot = await agent(
+      'Fetch the structure of the Frends Process draft with id ' + build.draftId + ': use ToolSearch to load the ' +
+      'mcp__plugin_frends_frends__process_get_structure tool, call it with that draft id, and return the full result ' +
+      'verbatim, with no commentary and no summary. If the tool is not available, return exactly: SNAPSHOT UNAVAILABLE',
+      { label: 'snapshot:' + item.name, phase: 'Snapshot' },
+    )
+    if (!snapshot || String(snapshot).indexOf('SNAPSHOT UNAVAILABLE') !== -1) {
+      return { name: item.name, state: 'blocked', draftId: build.draftId, reason: 'no independent snapshot; the reviews did not run', built: build.built }
+    }
     const briefs = [
-      ['conventions', 'Review the draft with id ' + build.draftId + ' against Frends conventions. Read the snapshot yourself with your read tools.'],
-      ['plan', 'Review the draft with id ' + build.draftId + ' against this plan section. Read the snapshot yourself with your read tools.\n\nPlan section:\n' + item.planSection],
+      ['conventions', 'Review the draft snapshot below against Frends conventions.'],
+      ['plan', 'Review the draft snapshot below against this plan entry.\n\nPlan entry:\n' + JSON.stringify(item, null, 2)],
     ]
     const verdicts = await parallel(briefs.map(([axis, brief]) => () =>
-      agent(brief + '\nReview against these lenses; report findings only.',
+      agent(brief + '\nReview against these lenses; report findings only. Set axis to "' + axis + '".\n\nSnapshot:\n' + snapshot,
         { agentType: 'frends:draft-reviewer', label: 'review:' + axis + ':' + item.name, phase: 'Review', schema: VERDICT_SCHEMA })))
+    const got = verdicts.filter(Boolean)
+    if (got.length < 2) {
+      return { name: item.name, state: 'blocked', draftId: build.draftId, reason: 'a reviewer returned nothing; the review is owed', built: build.built, verdicts: got }
+    }
     return {
       name: item.name,
       state: 'approval-required',
       draftId: build.draftId,
       built: build.built,
       remaining: build.remaining,
-      verdicts: verdicts.filter(Boolean),
+      verdicts: got,
     }
   },
 )
 
+const table = rows.filter(Boolean)
+const anyBlocked = table.some((r) => r.state !== 'approval-required') || table.length < processes.length
 return {
-  terminalState: 'approval-required',
+  terminalState: anyBlocked ? 'blocked' : 'approval-required',
   promotion: 'not decided; the person decides',
-  processes: rows.filter(Boolean),
+  runRecord: 'none; this workflow keeps no .frends/ record, this table is its evidence',
+  processes: table,
 }
