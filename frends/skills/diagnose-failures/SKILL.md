@@ -23,6 +23,6 @@ Call `get_guide` with `diagnose-process` and follow it for the mechanics: which 
 
 **Hand back a narrow claim.** Say what failed, when it started, how many runs are affected, and the narrowest cause the evidence supports. Where the evidence runs out, say that; a named uncertainty is more useful than a confident guess, because the user can go and check it.
 
-**The next step is the user's.** Retrying a run, editing a Process, changing an environment variable and deploying a new version are their decisions. Deleting a Process, undeploying and deactivating are Portal work these tools do not offer, so name what should be cleaned up and leave it to them.
+**The next step is the user's.** Retrying a run, editing a Process, changing an environment variable and deploying a new version are their decisions. When they want the fix built rather than only explained, offer the `/frends:fix-loop` skill: it takes the chosen cause to a validated edit draft with a run record and an independent review. Deleting a Process, undeploying and deactivating are Portal work these tools do not offer, so name what should be cleaned up and leave it to them.
 
 Uses (verify against the session's tool list): `get_guide`, `list_guides`, `get_overview`, `get_process_instances`, `get_process_instance_details`, `list_processes`, `get_process_data`, `list_environment_variables`.

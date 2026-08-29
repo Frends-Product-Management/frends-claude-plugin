@@ -29,7 +29,7 @@ If the plan's `confirmation_status` is still `pending`, that is a finding in its
 
 ## Review on two axes, and keep them apart
 
-Work the two axes separately and report them separately. Never merge the findings and never rank one list against the other. When this session can run subagents, hand the same snapshot, the same guide text and the plan to the `draft-reviewer` agent twice, one brief per axis, and report what each returns under its own heading. When it cannot, do both readings yourself, one after the other.
+Work the two axes separately and report them separately. Never merge the findings and never rank one list against the other. When this session can run subagents, hand the same snapshot, the same guide text and the plan to the `draft-reviewer` agent twice, one brief per axis, and report what each returns under its own heading. The brief is neutral: "review this snapshot against these lenses", never "confirm it is fine", because a brief that says what to find pre-writes the verdict. Each verdict comes back under `## Findings: <axis>` with a `## Not verified` section and a closing `Count:` line; quote it in full rather than summarising it. When the session cannot run subagents, do both readings yourself, one after the other, in the same shape.
 
 ### Axis one: Frends conventions
 
