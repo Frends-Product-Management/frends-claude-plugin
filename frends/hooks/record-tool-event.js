@@ -24,8 +24,10 @@ readStdin("recorder", (input) => {
     const v = r[k];
     if ((typeof v === "string" || typeof v === "number") && /^([0-9]{1,12}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/.test(String(v))) { draft = String(v); break; }
   }
-  if (draft === "?") {
+  if (draft === "?" && t === "create_process_draft") {
     // create_process_draft carries no id in its input; the id is in the response.
+    // Only this tool gets the fallback: any other response's first id-shaped key
+    // could belong to something else entirely.
     try {
       let resp = input.tool_response;
       if (Array.isArray(resp)) { resp = resp.map((b) => (b && b.text) || "").join("\n"); }
