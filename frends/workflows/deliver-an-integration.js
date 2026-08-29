@@ -1,10 +1,10 @@
 export const meta = {
   name: 'deliver-an-integration',
-  description: 'Build every Process in a confirmed integration plan to a validated draft, review each twice, and hand back a table. Promotion is never taken.',
-  whenToUse: 'The non-interactive form of the deliver-loop skill: a confirmed plan in, per-Process validated and twice-reviewed drafts out. Pass the integration-planning build handoff block as args, with its own keys: confirmation_status, open_questions, processes (name, mode, trigger, steps, acceptance_criteria, out_of_scope). This workflow keeps no .frends/ run record; the table it returns is its evidence.',
+  description: 'Build every Process in a confirmed integration plan to a validated draft, review each twice, rebuild once on findings, and hand back a table. Promotion is never taken.',
+  whenToUse: 'The non-interactive form of the deliver-loop skill: a confirmed plan in, per-Process validated and twice-reviewed drafts out. Pass the integration-planning build handoff block as args, with its own keys: confirmation_status, open_questions, processes, source, target, mappings, error_policy, credentials_needed, schedule_or_volume. This workflow keeps no .frends/ run record; the table it returns is its evidence.',
   phases: [
-    { title: 'Build', detail: 'one builder agent per planned Process' },
-    { title: 'Snapshot', detail: 'an independent fetch of each draft structure' },
+    { title: 'Build', detail: 'one builder agent per planned Process, one rebuild round on findings' },
+    { title: 'Snapshot', detail: 'an independent fetch of each draft structure and shape configurations' },
     { title: 'Review', detail: 'two reviewer verdicts per draft, conventions and plan' },
   ],
 }
@@ -56,17 +56,49 @@ if (allProcesses.length > 6) {
   log('the run caps at 6 Processes; ' + (allProcesses.length - 6) + ' left for the next run')
 }
 
+// What every builder dispatch needs beyond its own Process entry. Credential
+// entries are names only, by the plan's own rule.
+const planContext = JSON.stringify({
+  source: plan.source, target: plan.target, mappings: plan.mappings,
+  error_policy: plan.error_policy, credentials_needed: plan.credentials_needed,
+  schedule_or_volume: plan.schedule_or_volume,
+}, null, 2)
+
+function builderBrief(item, findings) {
+  return 'Build ONE Frends Process draft for the plan entry below, following your own working rules. ' +
+    'Stop at a validated draft; never promote, deploy, run, import a Task package or create an environment variable.\n\n' +
+    'Plan entry (its acceptance_criteria are frozen; you may not edit them):\n' + JSON.stringify(item, null, 2) +
+    '\n\nPlan context (source, target, mappings, error policy, credential names, volume):\n' + planContext +
+    (findings ? '\n\nA reviewer returned these findings on your draft; address each in the draft or name it in ## Remaining, verbatim:\n' + findings : '')
+}
+
+async function snapshotOf(draftId, name) {
+  const snap = await agent(
+    'Fetch a review snapshot of the Frends Process draft with id ' + draftId + ': use ToolSearch to load ' +
+    'mcp__plugin_frends_frends__process_get_structure and mcp__plugin_frends_frends__process_get_shape_config, call ' +
+    'process_get_structure with that draft id, then process_get_shape_config for each shape it lists. Return everything ' +
+    'verbatim, with no commentary and no summary. If the tools are not available, return exactly: SNAPSHOT UNAVAILABLE',
+    { label: 'snapshot:' + name, phase: 'Snapshot' },
+  )
+  if (!snap || String(snap).indexOf('SNAPSHOT UNAVAILABLE') !== -1) { return null }
+  return String(snap)
+}
+
+async function reviewOf(item, snapshot) {
+  const briefs = [
+    ['conventions', 'Review the draft snapshot below against Frends conventions.'],
+    ['plan', 'Review the draft snapshot below against this plan entry.\n\nPlan entry:\n' + JSON.stringify(item, null, 2)],
+  ]
+  const verdicts = await parallel(briefs.map(([axis, brief]) => () =>
+    agent(brief + '\nReview against these lenses; report findings only. Set axis to "' + axis + '".\n\nSnapshot:\n' + snapshot,
+      { agentType: 'frends:draft-reviewer', label: 'review:' + axis + ':' + item.name, phase: 'Review', schema: VERDICT_SCHEMA })))
+  return verdicts.filter(Boolean)
+}
+
 const rows = await pipeline(
   processes,
-  (p, item) => agent(
-    'Build ONE Frends Process draft for the plan entry below, following your own working rules. ' +
-    'Stop at a validated draft; never promote, deploy, run, import a Task package or create an environment variable.\n\n' +
-    'Plan entry (its acceptance_criteria are frozen; you may not edit them):\n' +
-    JSON.stringify(item, null, 2) +
-    (plan.error_policy ? '\n\nPlan error policy:\n' + JSON.stringify(plan.error_policy, null, 2) : '') +
-    (plan.mappings ? '\n\nField mappings:\n' + JSON.stringify(plan.mappings, null, 2) : ''),
-    { agentType: 'frends:process-builder', label: 'build:' + item.name, phase: 'Build', schema: BUILD_SCHEMA },
-  ),
+  (p, item) => agent(builderBrief(item, null),
+    { agentType: 'frends:process-builder', label: 'build:' + item.name, phase: 'Build', schema: BUILD_SCHEMA }),
   async (build, item) => {
     if (!build) { return { name: item.name, state: 'blocked', reason: 'the builder returned nothing' } }
     if (build.lastValidate.errors !== 0 || !build.lastValidate.afterLastChange) {
@@ -74,41 +106,43 @@ const rows = await pipeline(
     }
     // The reviewer reads only what it is handed, so an independent agent, not the
     // builder, fetches the frozen snapshot both verdicts are read from.
-    const snapshot = await agent(
-      'Fetch the structure of the Frends Process draft with id ' + build.draftId + ': use ToolSearch to load the ' +
-      'mcp__plugin_frends_frends__process_get_structure tool, call it with that draft id, and return the full result ' +
-      'verbatim, with no commentary and no summary. If the tool is not available, return exactly: SNAPSHOT UNAVAILABLE',
-      { label: 'snapshot:' + item.name, phase: 'Snapshot' },
-    )
-    if (!snapshot || String(snapshot).indexOf('SNAPSHOT UNAVAILABLE') !== -1) {
-      return { name: item.name, state: 'blocked', draftId: build.draftId, reason: 'no independent snapshot; the reviews did not run', built: build.built }
+    let snapshot = await snapshotOf(build.draftId, item.name)
+    if (!snapshot) { return { name: item.name, state: 'blocked', draftId: build.draftId, reason: 'no independent snapshot; the reviews did not run', built: build.built } }
+    let verdicts = await reviewOf(item, snapshot)
+    if (verdicts.length < 2) { return { name: item.name, state: 'blocked', draftId: build.draftId, reason: 'a reviewer returned nothing; the review is owed', built: build.built, verdicts: verdicts } }
+
+    // One rebuild round: findings go back to the builder verbatim, then a fresh
+    // snapshot and a fresh pair of verdicts. Findings that survive it are the
+    // person's to judge; the workflow never decides they do not matter.
+    const openFindings = (vs) => vs.flatMap((v) => (v.findings || []).map((f) => '[' + v.axis + '] ' + f))
+    let findings = openFindings(verdicts)
+    let rounds = 1
+    if (findings.length > 0) {
+      const rebuilt = await agent(builderBrief(item, findings.join('\n')),
+        { agentType: 'frends:process-builder', label: 'rebuild:' + item.name, phase: 'Build', schema: BUILD_SCHEMA })
+      rounds = 2
+      if (!rebuilt || rebuilt.lastValidate.errors !== 0 || !rebuilt.lastValidate.afterLastChange) {
+        return { name: item.name, state: 'blocked', draftId: build.draftId, reason: 'the rebuild round did not end in a clean validation', findings: findings, verdicts: verdicts }
+      }
+      snapshot = await snapshotOf(rebuilt.draftId, item.name)
+      if (!snapshot) { return { name: item.name, state: 'blocked', draftId: rebuilt.draftId, reason: 'no independent snapshot after the rebuild; the re-review did not run', findings: findings } }
+      verdicts = await reviewOf(item, snapshot)
+      if (verdicts.length < 2) { return { name: item.name, state: 'blocked', draftId: rebuilt.draftId, reason: 'a reviewer returned nothing after the rebuild; the review is owed', verdicts: verdicts } }
+      build = rebuilt
+      findings = openFindings(verdicts)
     }
-    const briefs = [
-      ['conventions', 'Review the draft snapshot below against Frends conventions.'],
-      ['plan', 'Review the draft snapshot below against this plan entry.\n\nPlan entry:\n' + JSON.stringify(item, null, 2)],
-    ]
-    const verdicts = await parallel(briefs.map(([axis, brief]) => () =>
-      agent(brief + '\nReview against these lenses; report findings only. Set axis to "' + axis + '".\n\nSnapshot:\n' + snapshot,
-        { agentType: 'frends:draft-reviewer', label: 'review:' + axis + ':' + item.name, phase: 'Review', schema: VERDICT_SCHEMA })))
-    const got = verdicts.filter(Boolean)
-    if (got.length < 2) {
-      return { name: item.name, state: 'blocked', draftId: build.draftId, reason: 'a reviewer returned nothing; the review is owed', built: build.built, verdicts: got }
+    if (findings.length > 0) {
+      return { name: item.name, state: 'exhausted', draftId: build.draftId, built: build.built, remaining: build.remaining, rounds: rounds, reason: 'findings remain after the rebuild round; the deliver-loop skill or the person decides', findings: findings, verdicts: verdicts }
     }
-    return {
-      name: item.name,
-      state: 'approval-required',
-      draftId: build.draftId,
-      built: build.built,
-      remaining: build.remaining,
-      verdicts: got,
-    }
+    return { name: item.name, state: 'approval-required', draftId: build.draftId, built: build.built, remaining: build.remaining, rounds: rounds, verdicts: verdicts }
   },
 )
 
 const table = rows.filter(Boolean)
-const anyBlocked = table.some((r) => r.state !== 'approval-required') || table.length < processes.length
+const clean = table.length === processes.length && table.every((r) => r.state === 'approval-required')
 return {
-  terminalState: anyBlocked ? 'blocked' : 'approval-required',
+  terminalState: clean ? 'approval-required' : 'blocked',
+  reason: clean ? 'every draft validated with no open finding; promotion is the next decision' : 'not every Process reached a clean, twice-reviewed draft; the per-Process states say what remains',
   promotion: 'not decided; the person decides',
   runRecord: 'none; this workflow keeps no .frends/ record, this table is its evidence',
   processes: table,

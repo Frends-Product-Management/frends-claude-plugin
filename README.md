@@ -203,8 +203,11 @@ environment variable stay your decisions in every loop.
 
 Three hooks gate the protocol mechanically. A recorder appends every draft mutation and
 validation to the open run record. A Stop gate refuses, once, a run that claims `terminal
-state: success` when the record shows the last validation ran before the last change, and
-writes the ledger line when a run closes. A verdict gate bounces, once, an agent report
+state: success` when the record shows the last validation ran before the last change to
+that draft, and writes the ledger line when a run closes. A close the gate could not vouch
+for, no readable evidence or a still-contradicted continuation stop, is marked `unverified`
+in the ledger. An auto-layout after the last validation is recorded but does not reopen the
+check: layout moves coordinates only. A verdict gate bounces, once, an agent report
 that is missing its required sections. Every gate message opens with the same sentence:
 "GATE RESULT ONLY, presence and order, not evidence of quality." A gate can fail work;
 only the reviewer and you can pass it. The gates fail open on their own errors and write a note to stderr, which Claude Code keeps in its hook debug output, not in the conversation.

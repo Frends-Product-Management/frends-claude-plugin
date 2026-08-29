@@ -8,10 +8,10 @@
     "exhausted",
     "stagnated"
   ],
-  "terminalStateRe": "^terminal state: (success|clean no-op|blocked|approval-required|exhausted|stagnated)\\b.*$",
+  "terminalStateRe": "^[ \\t>*_`-]*terminal state: (success|clean no-op|blocked|approval-required|exhausted|stagnated)\\b.*$",
   "recordLineLiteral": "turn N · action · evidence · remaining",
   "recordLineRe": "^turn [0-9]+ · .+ · .+ · .+$",
-  "ledgerLineRe": "^- [0-9]{4}-[0-9]{2}-[0-9]{2} · .+ · .+ · \\*\\*(success|clean no-op|blocked|approval-required|exhausted|stagnated)\\*\\* · .+$",
+  "ledgerLineRe": "^- [0-9]{4}-[0-9]{2}-[0-9]{2} · .+ · .+ · \\*\\*(success|clean no-op|blocked|approval-required|exhausted|stagnated)( · unverified)?\\*\\* · .+$",
   "evtLineRe": "^evt · ([a-z_]+) · (mutate|validate|leave-draft|layout) · draft ([^·]+) · (.+)$",
   "validateTool": "validate_process",
   "mutationToolRe": "^(create_process_draft|process_add_[a-z_]+|process_edit_shape|process_remove_shape|process_remove_connection|process_set_error_handler|process_batch_mutate)$",
@@ -21,7 +21,7 @@
       "lastLineRe": "^Count: [0-9]+ finding(s)?, worst: .+$",
       "reissue": "Your verdict must carry the headings `## Findings: <axis>` and `## Not verified`, each on its own line, and end with the line `Count: N findings, worst: ...`. Re-issue the verdict in that shape from what you already read; do not re-read the draft.",
       "headingsRe": [
-        "^## Findings: \\S.*$",
+        "^## Findings: (conventions|plan)\\s*$",
         "^## Not verified\\s*$"
       ]
     },

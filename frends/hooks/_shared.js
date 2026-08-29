@@ -4,13 +4,13 @@
 const fs = require("fs");
 const path = require("path");
 
-function readStdin(cb) {
+function readStdin(gate, cb) {
   const chunks = [];
   process.stdin.on("data", (c) => chunks.push(c));
   process.stdin.on("end", () => {
     let input = null;
     try { input = JSON.parse(Buffer.concat(chunks).toString("utf8")); } catch (e) { input = null; }
-    try { cb(input); } catch (e) { process.exit(0); }
+    try { cb(input); } catch (e) { note(gate, "crashed on its own defect; nothing was checked."); process.exit(0); }
   });
 }
 
@@ -36,6 +36,11 @@ function openRun(cwd) {
     if (!loop || !rec) { return null; }
     const recordPath = path.resolve(base, rec.trim());
     if (recordPath !== base && recordPath.indexOf(base + path.sep) !== 0) { return null; }
+    // Lexical containment is not enough: a symlink inside .frends could still
+    // point outside it, so the real paths must agree too.
+    let realBase = base; try { realBase = fs.realpathSync(base); } catch (e) { /* keep lexical */ }
+    let realRecord = recordPath; try { realRecord = fs.realpathSync(recordPath); } catch (e) { /* not created yet */ }
+    if (realRecord !== realBase && realRecord.indexOf(realBase + path.sep) !== 0) { return null; }
     return { loop: loop.trim(), recordPath: recordPath, pointerPath: p, basePath: base };
   } catch (e) { return null; }
 }

@@ -47,7 +47,7 @@ Hard cap: 8 turns, because a draft that needs more than eight build-and-review r
 1. Observe: read the run record and the draft state fresh; after a resume, the record is the memory.
 2. Choose the single most valuable in-scope action; read the last reflection first.
 3. Act: dispatch `frends:process-builder` with the job story, the frozen criteria, the pattern reference and this turn's delta. When the session cannot run agents, do the builder's steps inline and name the owed review at the end.
-4. Verify: the builder's report line must say zero errors after the last change. Then dispatch `frends:draft-reviewer` with the neutral brief "review this draft snapshot against these lenses: the frozen criteria, the plan, Frends conventions", never "confirm", and quote the verdict in full into the record.
+4. Verify: the builder's report line must say zero errors after the last change. Then dispatch `frends:draft-reviewer` once per axis, `conventions` and `plan` (the plan and the frozen criteria), each with the neutral brief "review this draft snapshot against these lenses", never "confirm", and quote both verdicts in full into the record.
 5. Record: append `turn N · action · evidence · remaining` to the record; after a failed verify also `reflection: <why> → <what changes next turn>`.
 
 Repeat or stop under the two-tier stop: the hard cap, or two verification passes that changed nothing, or two reflections that say the same thing.

@@ -2,7 +2,7 @@
 // tool call to the run record. Names, ids, classes and counts only, never values.
 const { readStdin, loadFormats, openRun, bareTool, note, fs } = require("./_shared.js");
 
-readStdin((input) => {
+readStdin("recorder", (input) => {
   if (!input) { process.exit(0); }
   let F; try { F = loadFormats(); } catch (e) { note("recorder", "formats.json unreadable; nothing was recorded."); process.exit(0); }
   const run = openRun(input.cwd || process.cwd());
@@ -22,7 +22,7 @@ readStdin((input) => {
   for (const k of Object.keys(r)) {
     if (!/^(draft|draftid|processdraftid)$/i.test(k)) { continue; }
     const v = r[k];
-    if ((typeof v === "string" || typeof v === "number") && /^[A-Za-z0-9-]{1,64}$/.test(String(v))) { draft = String(v); break; }
+    if ((typeof v === "string" || typeof v === "number") && /^([0-9]{1,12}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/.test(String(v))) { draft = String(v); break; }
   }
   let result = "not parsed";
   if (cls === "validate") {

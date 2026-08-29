@@ -49,7 +49,7 @@ Hard cap: 8 turns.
 1. Observe: read the run record and the draft state fresh.
 2. Choose the single most valuable in-scope action; read the last reflection first.
 3. Act: dispatch `frends:process-builder` with the change statement and the frozen criteria; the draft is always `create_process_draft` in edit mode on the target Process, never a new Process. Inline fallback as in the harness skill, with the review owed and named.
-4. Verify: zero errors after the last change, then `frends:draft-reviewer` with the neutral brief "review this edit against these lenses: the change statement, the preserved behavior, Frends conventions", verdict quoted in full.
+4. Verify: zero errors after the last change, then `frends:draft-reviewer` once per axis: `plan` (the change statement and the preserved behavior) and `conventions`, each with a neutral "review against these lenses" brief, both verdicts quoted in full.
 5. Record: append `turn N · action · evidence · remaining`; after a failed verify also `reflection: <why> → <what changes next turn>`.
 
 Repeat or stop under the two-tier stop.

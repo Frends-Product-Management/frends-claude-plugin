@@ -23,7 +23,7 @@ function lastAssistantText(input) {
   } catch (e) { return ""; }
 }
 
-readStdin((input) => {
+readStdin("verdict gate", (input) => {
   if (!input || input.stop_hook_active === true) { process.exit(0); }
   let F; try { F = loadFormats(); } catch (e) { note("verdict gate", "formats.json unreadable; nothing was checked."); process.exit(0); }
   const contract = (F.verdicts || {})[String(input.agent_type || "")];

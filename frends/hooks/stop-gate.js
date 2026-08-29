@@ -18,9 +18,23 @@ function evidenceFromRecord(text, F) {
     const id = m[3].trim();
     const d = drafts[id] || (drafts[id] = { lastMutate: -1, lastValidate: -1 });
     if (m[2] === "mutate") { d.lastMutate = i; }
-    if (m[2] === "validate" && m[1] === F.validateTool && !/errors: [1-9]/.test(m[4])) { d.lastValidate = i; }
+    if (m[2] === "validate" && m[1] === F.validateTool && !/errors: [1-9]/.test(m[4])) { markValidate(drafts, id, i); }
   }
   return saw ? drafts : null;
+}
+
+// A validate with a known id vouches only for that draft. One with an unknown
+// id vouches for every draft, because blocking on an attribution gap the
+// recorder could not close would be the gate failing closed.
+function markValidate(drafts, id, i) {
+  if (id === "?") {
+    for (const k of Object.keys(drafts)) { drafts[k].lastValidate = i; }
+    const d = drafts["?"] || (drafts["?"] = { lastMutate: -1, lastValidate: -1 });
+    d.lastValidate = i;
+    return;
+  }
+  const d = drafts[id] || (drafts[id] = { lastMutate: -1, lastValidate: -1 });
+  d.lastValidate = i;
 }
 
 function draftIdFrom(inputObj) {
@@ -28,7 +42,7 @@ function draftIdFrom(inputObj) {
   for (const k of Object.keys(r)) {
     if (!/^(draft|draftid|processdraftid)$/i.test(k)) { continue; }
     const v = r[k];
-    if ((typeof v === "string" || typeof v === "number") && /^[A-Za-z0-9-]{1,64}$/.test(String(v))) { return String(v); }
+    if ((typeof v === "string" || typeof v === "number") && /^([0-9]{1,12}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/.test(String(v))) { return String(v); }
   }
   return "?";
 }
@@ -62,34 +76,25 @@ function evidenceFromTranscript(transcriptPath, F) {
     const isValidate = u.tool === F.validateTool;
     if (!isMutate && !isValidate) { continue; }
     saw = true; i += 1;
-    const d = drafts[u.draft] || (drafts[u.draft] = { lastMutate: -1, lastValidate: -1 });
-    if (isMutate) { d.lastMutate = i; }
+    if (isMutate) {
+      const d = drafts[u.draft] || (drafts[u.draft] = { lastMutate: -1, lastValidate: -1 });
+      d.lastMutate = i;
+    }
     if (isValidate) {
       const r = results[u.id];
-      const failed = r && (r.errored || /"isValid"\s*:\s*false/i.test(r.text));
-      if (!failed) { d.lastValidate = i; }
+      const failed = r && (r.errored || /"isValid"\s*:\s*false/i.test(r.text) || /"[Ee]rrors"\s*:\s*\[\s*[^\]\s]/.test(r.text));
+      if (!failed) { markValidate(drafts, u.draft, i); }
     }
   }
   return saw ? drafts : null;
 }
 
-// Draft ids whose last change has no validate after it. When any event carries
-// an unknown id, per-draft attribution is not trustworthy, so fall back to
-// global ordering across all events.
+// Draft ids whose last change has no qualifying validate after it.
 function unvalidated(drafts) {
-  const ids = Object.keys(drafts);
-  if (ids.indexOf("?") !== -1) {
-    let lm = -1, lv = -1;
-    for (const id of ids) {
-      if (drafts[id].lastMutate > lm) { lm = drafts[id].lastMutate; }
-      if (drafts[id].lastValidate > lv) { lv = drafts[id].lastValidate; }
-    }
-    return (lm > -1 && lv < lm) ? ["?"] : [];
-  }
-  return ids.filter((id) => drafts[id].lastMutate > -1 && drafts[id].lastValidate < drafts[id].lastMutate);
+  return Object.keys(drafts).filter((id) => drafts[id].lastMutate > -1 && drafts[id].lastValidate < drafts[id].lastMutate);
 }
 
-readStdin((input) => {
+readStdin("stop gate", (input) => {
   if (!input) { process.exit(0); }
   let F;
   try { F = loadFormats(); } catch (e) { note("stop gate", "formats.json unreadable; nothing was checked."); process.exit(0); }
@@ -102,9 +107,21 @@ readStdin((input) => {
   const state = last ? last[1].toLowerCase() : null;
 
   if (input.stop_hook_active === true) {
-    // The gate had its one block. Close the run under the claimed state; the
-    // record keeps the evt lines, so a dressed-up state stays contradicted there.
-    if (state) { closeRun(run, state); }
+    // The gate had its one block and never blocks twice. Close under the claimed
+    // state, and when a success claim is still contradicted by the record, write
+    // that into the record first so the ledger line does not stand alone.
+    if (state) {
+      if (state === "success") {
+        let d2 = null;
+        try { d2 = evidenceFromRecord(fs.readFileSync(run.recordPath, "utf8"), F); } catch (e) { d2 = null; }
+        if (d2 === null || unvalidated(d2).length > 0) {
+          try { fs.appendFileSync(run.recordPath, "gate: closed on the continuation stop; the record does not show a validate_process after the last change\n"); } catch (e) { /* record gone */ }
+          closeRun(run, state, true);
+          process.exit(0);
+        }
+      }
+      closeRun(run, state);
+    }
     process.exit(0);
   }
   if (!state) { process.exit(0); }
@@ -115,7 +132,7 @@ readStdin((input) => {
   if (drafts === null) { drafts = evidenceFromTranscript(input.transcript_path, F); }
   if (drafts === null) {
     note("stop gate", "no evidence source was readable; nothing was checked.");
-    closeRun(run, "success");
+    closeRun(run, "success", true);
     process.exit(0);
   }
   const stale = unvalidated(drafts);
@@ -126,14 +143,17 @@ readStdin((input) => {
   }));
   process.exit(0);
 
-  function closeRun(r, st) {
+  // unverified marks a close the gate could not vouch for: the claimed state is
+  // kept, and the ledger says the evidence never confirmed it.
+  function closeRun(r, st, unverified) {
     try {
       const date = new Date().toISOString().slice(0, 10);
       const rel = path.relative(r.basePath, r.recordPath);
       const subject = path.basename(r.recordPath, ".md");
-      try { fs.appendFileSync(r.recordPath, "terminal state: " + st + "\n"); } catch (e) { /* record gone */ }
+      const mark = unverified ? st + " · unverified" : st;
+      try { fs.appendFileSync(r.recordPath, "terminal state: " + st + (unverified ? " (unverified by the gate)" : "") + "\n"); } catch (e) { /* record gone */ }
       fs.appendFileSync(path.join(r.basePath, "ledger.md"),
-        "- " + date + " · " + r.loop + " · " + subject + " · **" + st + "** · " + rel + "\n");
+        "- " + date + " · " + r.loop + " · " + subject + " · **" + mark + "** · " + rel + "\n");
       fs.unlinkSync(r.pointerPath);
     } catch (e) { note("stop gate", "the run could not be closed cleanly; check .frends/current-run yourself."); }
   }

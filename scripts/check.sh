@@ -72,6 +72,20 @@ grep -q '^terminal state: success' "$d/.frends/runs/r.md" || { echo "  stop-gate
 tail -1 "$d/.frends/ledger.md" | grep -qE "$(python3 -c 'import json;print(json.load(open("frends/hooks/formats.json"))["ledgerLineRe"])')" || { echo "  stop-gate: the ledger line does not match ledgerLineRe"; fail=1; }
 grep -E "$(python3 -c 'import json;print(json.load(open("frends/hooks/formats.json"))["evtLineRe"])')" "$d/.frends/runs/r.md" | head -1 | grep -q evt || { echo "  record evt lines do not match evtLineRe"; fail=1; }
 
+# a decorated state line (backticks, bold) still counts; the harness skill shows it backticked
+mkrun "$d"
+printf 'evt · process_add_task · mutate · draft 7 · ok\nevt · validate_process · validate · draft 7 · errors: 0\n' >> "$d/.frends/runs/r.md"
+out=$(printf '{"cwd":"%s","last_assistant_message":"`terminal state: success`"}' "$d" | stopgate)
+[ -f "$d/.frends/current-run" ] && { echo "  stop-gate: missed a backticked state line"; fail=1; }
+mkrun "$d"
+printf 'evt · validate_process · validate · draft 7 · errors: 0\nevt · process_add_task · mutate · draft 7 · ok\n' >> "$d/.frends/runs/r.md"
+out=$(printf '{"cwd":"%s","last_assistant_message":"**terminal state: success**"}' "$d" | stopgate)
+echo "$out" | grep -q '"decision":"block"' || { echo "  stop-gate: a bolded state line escaped the block"; fail=1; }
+rm "$d/.frends/current-run" 2>/dev/null || true
+
+# the record-line example grammar holds (recordLineRe is load-bearing here)
+echo 'turn 1 · dispatched the builder · validate_process draft 7: 0 errors · slices 2-4 remain' | grep -qE "$(python3 -c 'import json;print(json.load(open("frends/hooks/formats.json"))["recordLineRe"])')" || { echo "  the record grammar example does not match recordLineRe"; fail=1; }
+
 # a state line that carries its evidence on the same line still counts
 mkrun "$d"
 printf 'evt · process_add_task · mutate · draft 7 · ok\nevt · validate_process · validate · draft 7 · errors: 0\n' >> "$d/.frends/runs/r.md"
@@ -100,10 +114,13 @@ echo "$out" | grep -q '"decision":"block"' || { echo "  stop-gate: did not block
 echo "$out" | grep -q 'GATE RESULT ONLY' || { echo "  stop-gate: block reason lacks the banner"; fail=1; }
 [ -f "$d/.frends/current-run" ] || { echo "  stop-gate: closed a blocked run"; fail=1; }
 
-# the same claim with stop_hook_active true: never blocks twice, and the run closes
+# the same claim with stop_hook_active true: never blocks twice, the run closes,
+# and the still-contradicted close is marked unverified in ledger and record
 out=$(printf '{"cwd":"%s","stop_hook_active":true,"last_assistant_message":"terminal state: success"}' "$d" | stopgate)
 echo "$out" | grep -q '"decision"' && { echo "  stop-gate: blocked twice"; fail=1; }
 [ -f "$d/.frends/current-run" ] && { echo "  stop-gate: run left open after the continuation stop"; fail=1; }
+tail -1 "$d/.frends/ledger.md" | grep -q 'success · unverified' || { echo "  stop-gate: contradicted continuation close not marked unverified"; fail=1; }
+grep -q '^gate: closed on the continuation stop' "$d/.frends/runs/r.md" || { echo "  stop-gate: no gate note in the record on the continuation close"; fail=1; }
 
 # a non-success state closes the run honestly
 mkrun "$d"
@@ -118,12 +135,25 @@ echo "$out" | grep -q '"decision"' && { echo "  stop-gate: blocked the good tran
 mkrun "$d"
 out=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: success","transcript_path":"%s"}' "$d" "$PWD/$FIX/transcript-validate-then-mutate.jsonl" | stopgate)
 echo "$out" | grep -q '"decision":"block"' || { echo "  stop-gate: missed the bad transcript order"; fail=1; }
+mkrun "$d"
+out=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: success","transcript_path":"%s"}' "$d" "$PWD/$FIX/transcript-validate-with-errors.jsonl" | stopgate)
+echo "$out" | grep -q '"decision":"block"' || { echo "  stop-gate: certified a validation that reported errors"; fail=1; }
+rm "$d/.frends/current-run" 2>/dev/null || true
 
 # missing transcript and empty record: allow with the named non-check
 mkrun "$d"
 out=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: success","transcript_path":"%s/absent.jsonl"}' "$d" "$d" | stopgate 2>&1)
 echo "$out" | grep -q 'nothing was checked' || { echo "  stop-gate: missing evidence not named"; fail=1; }
 echo "$out" | grep -q '"decision"' && { echo "  stop-gate: blocked with no evidence source"; fail=1; }
+tail -1 "$d/.frends/ledger.md" | grep -q 'success · unverified' || { echo "  stop-gate: unevidenced close not marked unverified"; fail=1; }
+tail -1 "$d/.frends/ledger.md" | grep -qE "$(python3 -c 'import json;print(json.load(open("frends/hooks/formats.json"))["ledgerLineRe"])')" || { echo "  stop-gate: the unverified ledger line does not match ledgerLineRe"; fail=1; }
+
+# an auto-layout after the last validation does not reopen the check, by design
+mkrun "$d"
+printf 'evt · process_add_task · mutate · draft 7 · ok\nevt · validate_process · validate · draft 7 · errors: 0\nevt · process_auto_layout · layout · draft 7 · ok\n' >> "$d/.frends/runs/r.md"
+out=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: success"}' "$d" | stopgate)
+echo "$out" | grep -q '"decision"' && { echo "  stop-gate: blocked a layout-after-validate success"; fail=1; }
+tail -1 "$d/.frends/ledger.md" | grep -q 'unverified' && { echo "  stop-gate: layout close wrongly marked unverified"; fail=1; }
 
 # garbage stdin: fail open
 out=$(echo 'not json' | stopgate); [ -z "$out" ] || { echo "  stop-gate: noisy on garbage"; fail=1; }
@@ -144,6 +174,15 @@ echo "$out" | grep -q '"decision"' && { echo "  stop-gate: blocked while broken 
 echo "$vout" | grep -q '"decision"' && { echo "  verdict-gate: blocked while broken (must fail open)"; fail=1; }
 grep -q 'evt · process_add_expression' "$d/.frends/runs/r.md" && { echo "  recorder: wrote while broken"; fail=1; }
 echo "$nerr" | grep -q 'formats.json unreadable' || { echo "  stop-gate: broken gate did not say so"; fail=1; }
+
+# a symlink inside .frends pointing outside it is treated as no run at all
+mkrun "$d"
+: > "$d/outside-target.md"
+ln -s "$d/outside-target.md" "$d/.frends/runs/link.md"
+printf 'loop: build-loop\nrecord: runs/link.md\n' > "$d/.frends/current-run"
+printf '{"cwd":"%s","tool_name":"mcp__plugin_frends_frends__process_add_task","tool_input":{"draftId":7}}' "$d" | rec 2>/dev/null || true
+[ -s "$d/outside-target.md" ] && { echo "  recorder: followed a symlink out of .frends"; fail=1; }
+rm "$d/.frends/runs/link.md" "$d/.frends/current-run" 2>/dev/null || true
 
 # a current-run pointer that escapes .frends is treated as no run at all
 mkdir -p "$d/.frends"; printf 'loop: build-loop\nrecord: ../../escape.md\n' > "$d/.frends/current-run"
@@ -168,6 +207,9 @@ out=$(printf '{"agent_type":"frends:unknown-agent","last_assistant_message":"jun
 inline=$(python3 -c 'import json;print(json.dumps({"agent_type":"frends:draft-reviewer","last_assistant_message":"the ## Findings: conventions heading and the ## Not verified part are discussed inline\nCount: 1 finding, worst: x"}))')
 out=$(echo "$inline" | vgate)
 echo "$out" | grep -q '"decision":"block"' || { echo "  verdict-gate: accepted headings mentioned in prose"; fail=1; }
+banana=$(python3 -c 'import json;print(json.dumps({"agent_type":"frends:draft-reviewer","last_assistant_message":"## Findings: banana\n- x\n\n## Not verified\nnothing\n\nCount: 1 finding, worst: x"}))')
+out=$(echo "$banana" | vgate)
+echo "$out" | grep -q '"decision":"block"' || { echo "  verdict-gate: accepted an invalid review axis"; fail=1; }
 
 say "the recorder writes names and counts, never values, and only into an open run"
 rec() { node frends/hooks/record-tool-event.js; }
@@ -185,6 +227,8 @@ printf '{"cwd":"%s","tool_name":"mcp__plugin_frends_frends__process_add_task","t
 grep -q 'SECRETVALUE2' "$d/.frends/runs/r.md" && { echo "  recorder: leaked a value from a draft-named key"; fail=1; }
 printf '{"cwd":"%s","tool_name":"mcp__plugin_frends_frends__process_auto_layout","tool_input":{"draftId":7}}' "$d" | rec
 grep -q 'evt · process_auto_layout · layout · draft 7 · ok' "$d/.frends/runs/r.md" || { echo "  recorder: missing the layout line"; fail=1; }
+printf '{"cwd":"%s","tool_name":"mcp__plugin_frends_frends__process_add_task","tool_input":{"draftId":"sk-live-c0ffee-SECRETVALUE3"}}' "$d" | rec
+grep -q 'SECRETVALUE3' "$d/.frends/runs/r.md" && { echo "  recorder: wrote a secret-shaped draft id"; fail=1; }
 d2=$(mktemp -d)
 printf '{"cwd":"%s","tool_name":"mcp__plugin_frends_frends__process_add_task","tool_input":{"draftId":7}}' "$d2" | rec
 [ -e "$d2/.frends" ] && { echo "  recorder: wrote without an open run"; fail=1; }
