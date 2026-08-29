@@ -39,7 +39,14 @@ function openRun(cwd) {
     // Lexical containment is not enough: a symlink inside .frends could still
     // point outside it, so the real paths must agree too.
     let realBase = base; try { realBase = fs.realpathSync(base); } catch (e) { /* keep lexical */ }
-    let realRecord = recordPath; try { realRecord = fs.realpathSync(recordPath); } catch (e) { /* not created yet */ }
+    let realRecord;
+    try { realRecord = fs.realpathSync(recordPath); }
+    catch (e) {
+      // The record may not exist yet; resolve its parent instead, so a
+      // symlinked directory cannot host the file's creation outside .frends.
+      try { realRecord = path.join(fs.realpathSync(path.dirname(recordPath)), path.basename(recordPath)); }
+      catch (e2) { realRecord = recordPath; /* parent missing: no append can create it */ }
+    }
     if (realRecord !== realBase && realRecord.indexOf(realBase + path.sep) !== 0) { return null; }
     return { loop: loop.trim(), recordPath: recordPath, pointerPath: p, basePath: base };
   } catch (e) { return null; }

@@ -64,12 +64,13 @@ const planContext = JSON.stringify({
   schedule_or_volume: plan.schedule_or_volume,
 }, null, 2)
 
-function builderBrief(item, findings) {
+function builderBrief(item, findings, draftId) {
   return 'Build ONE Frends Process draft for the plan entry below, following your own working rules. ' +
     'Stop at a validated draft; never promote, deploy, run, import a Task package or create an environment variable.\n\n' +
     'Plan entry (its acceptance_criteria are frozen; you may not edit them):\n' + JSON.stringify(item, null, 2) +
     '\n\nPlan context (source, target, mappings, error policy, credential names, volume):\n' + planContext +
-    (findings ? '\n\nA reviewer returned these findings on your draft; address each in the draft or name it in ## Remaining, verbatim:\n' + findings : '')
+    (draftId ? '\n\nRebuild INSIDE the existing draft with id ' + draftId + '; do not create a new draft.' : '') +
+    (findings ? '\n\nA reviewer returned these findings on that draft; address each in the draft or name it in ## Remaining, verbatim:\n' + findings : '')
 }
 
 async function snapshotOf(draftId, name) {
@@ -84,15 +85,19 @@ async function snapshotOf(draftId, name) {
   return String(snap)
 }
 
+// Two verdicts, one per axis; a run is only clean when both axes came back.
 async function reviewOf(item, snapshot) {
   const briefs = [
-    ['conventions', 'Review the draft snapshot below against Frends conventions.'],
-    ['plan', 'Review the draft snapshot below against this plan entry.\n\nPlan entry:\n' + JSON.stringify(item, null, 2)],
+    ['conventions', 'Fetch the served process-authoring guide with get_guide first and review the draft snapshot below against Frends conventions and the guide\u0027s pitfalls.'],
+    ['plan', 'Review the draft snapshot below against this plan entry and its context.\n\nPlan entry:\n' + JSON.stringify(item, null, 2) + '\n\nPlan context:\n' + planContext],
   ]
   const verdicts = await parallel(briefs.map(([axis, brief]) => () =>
     agent(brief + '\nReview against these lenses; report findings only. Set axis to "' + axis + '".\n\nSnapshot:\n' + snapshot,
       { agentType: 'frends:draft-reviewer', label: 'review:' + axis + ':' + item.name, phase: 'Review', schema: VERDICT_SCHEMA })))
-  return verdicts.filter(Boolean)
+  const got = verdicts.filter(Boolean)
+  const axes = got.map((v) => v.axis)
+  if (axes.indexOf('conventions') === -1 || axes.indexOf('plan') === -1) { return null }
+  return got
 }
 
 const rows = await pipeline(
@@ -109,7 +114,7 @@ const rows = await pipeline(
     let snapshot = await snapshotOf(build.draftId, item.name)
     if (!snapshot) { return { name: item.name, state: 'blocked', draftId: build.draftId, reason: 'no independent snapshot; the reviews did not run', built: build.built } }
     let verdicts = await reviewOf(item, snapshot)
-    if (verdicts.length < 2) { return { name: item.name, state: 'blocked', draftId: build.draftId, reason: 'a reviewer returned nothing; the review is owed', built: build.built, verdicts: verdicts } }
+    if (!verdicts) { return { name: item.name, state: 'blocked', draftId: build.draftId, reason: 'the two review axes did not both come back; the review is owed', built: build.built } }
 
     // One rebuild round: findings go back to the builder verbatim, then a fresh
     // snapshot and a fresh pair of verdicts. Findings that survive it are the
@@ -118,7 +123,7 @@ const rows = await pipeline(
     let findings = openFindings(verdicts)
     let rounds = 1
     if (findings.length > 0) {
-      const rebuilt = await agent(builderBrief(item, findings.join('\n')),
+      const rebuilt = await agent(builderBrief(item, findings.join('\n'), build.draftId),
         { agentType: 'frends:process-builder', label: 'rebuild:' + item.name, phase: 'Build', schema: BUILD_SCHEMA })
       rounds = 2
       if (!rebuilt || rebuilt.lastValidate.errors !== 0 || !rebuilt.lastValidate.afterLastChange) {
@@ -127,7 +132,7 @@ const rows = await pipeline(
       snapshot = await snapshotOf(rebuilt.draftId, item.name)
       if (!snapshot) { return { name: item.name, state: 'blocked', draftId: rebuilt.draftId, reason: 'no independent snapshot after the rebuild; the re-review did not run', findings: findings } }
       verdicts = await reviewOf(item, snapshot)
-      if (verdicts.length < 2) { return { name: item.name, state: 'blocked', draftId: rebuilt.draftId, reason: 'a reviewer returned nothing after the rebuild; the review is owed', verdicts: verdicts } }
+      if (!verdicts) { return { name: item.name, state: 'blocked', draftId: rebuilt.draftId, reason: 'the two review axes did not both come back after the rebuild; the review is owed' } }
       build = rebuilt
       findings = openFindings(verdicts)
     }
@@ -140,9 +145,10 @@ const rows = await pipeline(
 
 const table = rows.filter(Boolean)
 const clean = table.length === processes.length && table.every((r) => r.state === 'approval-required')
+const anyBlocked = table.length < processes.length || table.some((r) => r.state === 'blocked')
 return {
-  terminalState: clean ? 'approval-required' : 'blocked',
-  reason: clean ? 'every draft validated with no open finding; promotion is the next decision' : 'not every Process reached a clean, twice-reviewed draft; the per-Process states say what remains',
+  terminalState: clean ? 'approval-required' : (anyBlocked ? 'blocked' : 'exhausted'),
+  reason: clean ? 'every draft validated with no open finding; promotion is the next decision' : (anyBlocked ? 'not every Process reached a clean, twice-reviewed draft; the per-Process states say what remains' : 'findings survived the rebuild round on at least one Process; the per-Process rows carry them'),
   promotion: 'not decided; the person decides',
   runRecord: 'none; this workflow keeps no .frends/ record, this table is its evidence',
   processes: table,

@@ -248,7 +248,8 @@ leave the draft stage, and no internal path reaches a public file. Run it before
 release. What it cannot check, and what was not exercised before 0.7.0: the prompt appearing
 in a live Claude Code session, its behaviour in bypass mode and with hooks disabled, the
 agents' tool allowlists and whether their `skills` preload loads the harness, the live Stop
-and SubagentStop behaviour in a real session, the workflow's first run, and Node on Windows.
+and SubagentStop behaviour in a real session, whether a structured-output dispatch of the
+reviewer passes the verdict gate untouched, the workflow's first run, and Node on Windows.
 Treat those as claims to verify in your own session, with the self-tests above.
 
 Every content change must bump `version` in `frends/.claude-plugin/plugin.json`. Claude

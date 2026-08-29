@@ -17,7 +17,7 @@ Use a named tool only if it appears in this session's tool list. A missing tool 
 
 - the person chose the cause from the ranked diagnosis, and
 - an edit draft of the same Process (never a new one) carries the frozen change statement, and
-- the last `validate_process` ran after the last change with zero errors, and the `frends:draft-reviewer` verdict, quoted in full, finds the change matches the statement and the preserved behavior is untouched.
+- the last `validate_process` ran after the last change with zero errors, and both `frends:draft-reviewer` verdicts, one per axis, quoted in full, find the change matches the statement, the preserved behavior is untouched and the conventions hold.
 
 Proving the fix needs a promotion and a run, which are the person's steps. The normal end of this loop is therefore approval-required, and saying so is part of DONE.
 

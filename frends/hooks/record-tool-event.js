@@ -24,6 +24,16 @@ readStdin("recorder", (input) => {
     const v = r[k];
     if ((typeof v === "string" || typeof v === "number") && /^([0-9]{1,12}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/.test(String(v))) { draft = String(v); break; }
   }
+  if (draft === "?") {
+    // create_process_draft carries no id in its input; the id is in the response.
+    try {
+      let resp = input.tool_response;
+      if (Array.isArray(resp)) { resp = resp.map((b) => (b && b.text) || "").join("\n"); }
+      const text = typeof resp === "string" ? resp : JSON.stringify(resp);
+      const m = String(text).match(/"(?:draftId|DraftId|id)"\s*:\s*"?([0-9]{1,12}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})"?/);
+      if (m) { draft = m[1]; }
+    } catch (e) { /* stays ? */ }
+  }
   let result = "not parsed";
   if (cls === "validate") {
     try {

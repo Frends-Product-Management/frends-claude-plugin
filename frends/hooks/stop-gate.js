@@ -23,9 +23,10 @@ function evidenceFromRecord(text, F) {
   return saw ? drafts : null;
 }
 
-// A validate with a known id vouches only for that draft. One with an unknown
-// id vouches for every draft, because blocking on an attribution gap the
-// recorder could not close would be the gate failing closed.
+// A validate with a known id vouches for that draft and for the unattributed
+// bucket; one with an unknown id vouches for every draft. Blocking on an
+// attribution gap the recorder could not close would be the gate failing
+// closed, and the reviewer criteria still read the record behind it.
 function markValidate(drafts, id, i) {
   if (id === "?") {
     for (const k of Object.keys(drafts)) { drafts[k].lastValidate = i; }
@@ -35,6 +36,7 @@ function markValidate(drafts, id, i) {
   }
   const d = drafts[id] || (drafts[id] = { lastMutate: -1, lastValidate: -1 });
   d.lastValidate = i;
+  if (drafts["?"]) { drafts["?"].lastValidate = i; }
 }
 
 function draftIdFrom(inputObj) {

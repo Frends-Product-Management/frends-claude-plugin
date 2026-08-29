@@ -72,6 +72,21 @@ grep -q '^terminal state: success' "$d/.frends/runs/r.md" || { echo "  stop-gate
 tail -1 "$d/.frends/ledger.md" | grep -qE "$(python3 -c 'import json;print(json.load(open("frends/hooks/formats.json"))["ledgerLineRe"])')" || { echo "  stop-gate: the ledger line does not match ledgerLineRe"; fail=1; }
 grep -E "$(python3 -c 'import json;print(json.load(open("frends/hooks/formats.json"))["evtLineRe"])')" "$d/.frends/runs/r.md" | head -1 | grep -q evt || { echo "  record evt lines do not match evtLineRe"; fail=1; }
 
+# the from-scratch happy path: create (id only in the response), add, validate, success
+mkrun "$d"
+printf '{"cwd":"%s","tool_name":"mcp__plugin_frends_frends__create_process_draft","tool_input":{"name":"x"},"tool_response":{"draftId":7}}' "$d" | node frends/hooks/record-tool-event.js
+grep -q 'evt · create_process_draft · mutate · draft 7 · ok' "$d/.frends/runs/r.md" || { echo "  recorder: creation id not read from the response"; fail=1; }
+printf 'evt · process_add_task · mutate · draft 7 · ok\nevt · validate_process · validate · draft 7 · errors: 0\n' >> "$d/.frends/runs/r.md"
+out=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: success"}' "$d" | stopgate)
+echo "$out" | grep -q '"decision"' && { echo "  stop-gate: blocked the from-scratch happy path"; fail=1; }
+tail -1 "$d/.frends/ledger.md" | grep -q 'unverified' && { echo "  stop-gate: from-scratch close wrongly unverified"; fail=1; }
+
+# an unattributable creation is covered by the known-id validate that follows it
+mkrun "$d"
+printf 'evt · create_process_draft · mutate · draft ? · ok\nevt · process_add_task · mutate · draft 7 · ok\nevt · validate_process · validate · draft 7 · errors: 0\n' >> "$d/.frends/runs/r.md"
+out=$(printf '{"cwd":"%s","last_assistant_message":"terminal state: success"}' "$d" | stopgate)
+echo "$out" | grep -q '"decision"' && { echo "  stop-gate: blocked on an attribution gap"; fail=1; }
+
 # a decorated state line (backticks, bold) still counts; the harness skill shows it backticked
 mkrun "$d"
 printf 'evt · process_add_task · mutate · draft 7 · ok\nevt · validate_process · validate · draft 7 · errors: 0\n' >> "$d/.frends/runs/r.md"
@@ -82,6 +97,19 @@ printf 'evt · validate_process · validate · draft 7 · errors: 0\nevt · proc
 out=$(printf '{"cwd":"%s","last_assistant_message":"**terminal state: success**"}' "$d" | stopgate)
 echo "$out" | grep -q '"decision":"block"' || { echo "  stop-gate: a bolded state line escaped the block"; fail=1; }
 rm "$d/.frends/current-run" 2>/dev/null || true
+
+# a blockquoted state line is a quoted example, never a claim
+mkrun "$d"
+printf 'evt · process_add_task · mutate · draft 7 · ok\nevt · validate_process · validate · draft 7 · errors: 0\n' >> "$d/.frends/runs/r.md"
+out=$(printf '{"cwd":"%s","last_assistant_message":"The grammar for later is:\n> terminal state: success\nbut we are not there yet."}' "$d" | stopgate)
+[ -f "$d/.frends/current-run" ] || { echo "  stop-gate: closed a run on a blockquoted example"; fail=1; }
+# a numbered-list or heading rendering of the state line still counts
+out=$(printf '{"cwd":"%s","last_assistant_message":"1. terminal state: success"}' "$d" | stopgate)
+[ -f "$d/.frends/current-run" ] && { echo "  stop-gate: missed a numbered-list state line"; fail=1; }
+mkrun "$d"
+printf 'evt · process_add_task · mutate · draft 7 · ok\nevt · validate_process · validate · draft 7 · errors: 0\n' >> "$d/.frends/runs/r.md"
+out=$(printf '{"cwd":"%s","last_assistant_message":"# terminal state: success"}' "$d" | stopgate)
+[ -f "$d/.frends/current-run" ] && { echo "  stop-gate: missed a heading state line"; fail=1; }
 
 # the record-line example grammar holds (recordLineRe is load-bearing here)
 echo 'turn 1 · dispatched the builder · validate_process draft 7: 0 errors · slices 2-4 remain' | grep -qE "$(python3 -c 'import json;print(json.load(open("frends/hooks/formats.json"))["recordLineRe"])')" || { echo "  the record grammar example does not match recordLineRe"; fail=1; }
@@ -180,9 +208,17 @@ mkrun "$d"
 : > "$d/outside-target.md"
 ln -s "$d/outside-target.md" "$d/.frends/runs/link.md"
 printf 'loop: build-loop\nrecord: runs/link.md\n' > "$d/.frends/current-run"
-printf '{"cwd":"%s","tool_name":"mcp__plugin_frends_frends__process_add_task","tool_input":{"draftId":7}}' "$d" | rec 2>/dev/null || true
+printf '{"cwd":"%s","tool_name":"mcp__plugin_frends_frends__process_add_task","tool_input":{"draftId":7}}' "$d" | node frends/hooks/record-tool-event.js
 [ -s "$d/outside-target.md" ] && { echo "  recorder: followed a symlink out of .frends"; fail=1; }
 rm "$d/.frends/runs/link.md" "$d/.frends/current-run" 2>/dev/null || true
+
+# a symlinked runs directory with a not-yet-created record stays contained too
+mkdir -p "$d/.frends" "$d/outside-dir"
+ln -s "$d/outside-dir" "$d/.frends/runs2"
+printf 'loop: build-loop\nrecord: runs2/new.md\n' > "$d/.frends/current-run"
+printf '{"cwd":"%s","tool_name":"mcp__plugin_frends_frends__process_add_task","tool_input":{"draftId":7}}' "$d" | node frends/hooks/record-tool-event.js
+[ -e "$d/outside-dir/new.md" ] && { echo "  recorder: created a record through a symlinked directory"; fail=1; }
+rm "$d/.frends/runs2" "$d/.frends/current-run" 2>/dev/null || true
 
 # a current-run pointer that escapes .frends is treated as no run at all
 mkdir -p "$d/.frends"; printf 'loop: build-loop\nrecord: ../../escape.md\n' > "$d/.frends/current-run"

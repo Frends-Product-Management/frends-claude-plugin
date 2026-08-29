@@ -16,7 +16,7 @@ Use a named tool only if it appears in this session's tool list. A missing tool 
 ## DONE when
 
 - the last `validate_process` on the draft ran after the last change and reported zero errors, and
-- the `frends:draft-reviewer` verdict, quoted in full, lists no finding that breaks a frozen criterion, and
+- both `frends:draft-reviewer` verdicts, one per axis, quoted in full, list no finding that breaks a frozen criterion, and
 - every frozen criterion is met with evidence or reported to the person as an open item.
 
 ## ANTI-GAMING
