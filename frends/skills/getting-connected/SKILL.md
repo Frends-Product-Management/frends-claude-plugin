@@ -1,6 +1,6 @@
 ---
 name: getting-connected
-description: Connect an AI client to a Frends tenant, and work out why the connection itself is not working. Use when the Frends tools are missing, when a call returns 401 or 404, when lists come back empty, when one specific tool is absent, or when someone is setting up Frends for the first time. Do not use when the connection works and a Process run failed, which is a diagnosis.
+description: Connect an AI client to a Frends tenant, and work out why the connection itself is not working. Use when the Frends tools are missing, when a call returns 401 or 404, when lists come back empty, when one specific tool is absent, when someone is setting up Frends for the first time, or when someone asks to check their Frends connection after a setup. Do not use when the connection works and a Process run failed, which is a diagnosis.
 ---
 
 # Getting connected to your Frends tenant
@@ -62,7 +62,7 @@ setx FRENDS_MCP_URL "https://<your-tenant>.frendsapp.com/mcp"
 setx FRENDS_MCP_TOKEN "<paste-your-token-here>"
 ```
 
-Set them in the environment the AI client itself will see, which is the shell the client starts from.
+Set them in the environment the AI client itself will see, which is the process the client starts from. A terminal reads the shell profile; an editor started from the Dock or the Start menu does not. Ask how they start the client. On macOS with an editor started from the Dock, give `launchctl setenv` for both variables and say the editor must be restarted afterwards; on Windows `setx` covers editors started from the Start menu once they are restarted.
 
 Done when both variables are set in that environment.
 
@@ -83,6 +83,7 @@ Work through the checks in this order: whether any Frends tools are there at all
 | What you see | What it means | What fixes it |
 |---|---|---|
 | No Frends tools at all, or the server never starts | Nothing reached the tenant, so there is no status code to read | The two variables are almost certainly not set in the environment the client sees. Set them and restart the client |
+| Frends tools answer, but the permission prompt never appears and the plugin's agents report no tools | A Frends MCP server configured by hand has the same address, so the client keeps that one and drops the plugin's; the plugin's hook and agents bind to the plugin's server only | Remove the manual server and restart the client; the connected server must then be the plugin's |
 | Most tools work, one specific tool is missing | Not a broken connection, and not proof the tenant lacks that capability. A tool appears only when an API Policy targets it and the calling Private Application is granted access, and the platform version also decides which tools exist | Check the API Policy and the grant in the Portal |
 | A call returns 401 | The token has expired, or its Private Application is not admitted by the tenant's API Policy | Both are fixed in the Portal |
 | A call returns 404 | The Platform MCP is not enabled on this tenant | An administrator turns it on |
