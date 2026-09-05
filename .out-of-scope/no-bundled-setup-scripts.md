@@ -14,4 +14,4 @@ The escape hatches already exist:
 
 ## Prior requests
 
-None yet. Recorded when the walkthrough was written, so the reasoning is available before the first request.
+- 2026-09-05: "a prompt that will setup plugin automatically, because most of the people doesnt do clickops and copy paste". Answered with the setup prompt in the README: it is instructions the person pastes into their AI client, not an executable, and the token still goes into their own terminal. The boundary stands.

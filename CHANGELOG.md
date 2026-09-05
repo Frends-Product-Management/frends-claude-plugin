@@ -1,5 +1,15 @@
 # frends
 
+## 0.7.1
+
+### Patch Changes
+
+- `getting-connected` now asks how the client is started and gives the login-session commands when an editor is launched from the Dock or the Start menu, because a shell profile is not read there and the two variables were silently missing. Verified on macOS with Claude Code inside an editor.
+
+- `getting-connected` gains one symptom row: Frends tools answer, but the permission prompt never appears and the plugin's agents report no tools. Cause: a Frends MCP server configured by hand with the same address, which the client keeps in place of the plugin's server; the plugin's hook and agents bind to the plugin's server only. Fix: remove the manual server. Verified in a project that carried such a server.
+
+- README: install is written as marketplace first, with a guided path (one paste-and-go prompt that installs from the marketplace, walks the connection and ends with the line that checks it) and a by-hand path (the same commands, the two checks that prove the connection). The same two findings above, and the note that a hand-configured server must be removed first.
+
 ## 0.7.0
 
 ### Minor Changes

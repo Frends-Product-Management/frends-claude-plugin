@@ -20,24 +20,76 @@ Your MCP endpoint is your Portal address followed by `/mcp`, for example
 
 ## Install in Claude Code
 
-Add the marketplace and install the plugin:
+The plugin is published through a Claude Code plugin marketplace, and that is the only
+supported way in: add the marketplace, install the plugin from it, connect, check. Nothing is
+copied by hand. Two ways to do it follow; both end at the same check.
+
+### Guided: paste one prompt
+
+Open Claude Code in any folder and paste the prompt below. Claude runs the install commands,
+takes you through the connection one step at a time, and ends with the line you paste after
+the restart to prove the connection. You create the token yourself in the Frends Portal and
+put it in your own terminal, never in the conversation.
+
+```
+I want to use the Frends plugin for Claude Code with my Frends tenant. Set it up with me, one step per message.
+1. Install it: run the claude plugin commands that add the marketplace Frends-Product-Management/frends-claude-plugin and install the plugin frends@frends, and show me what they returned.
+2. Ask me for my tenant name and write out the MCP address you build from it.
+3. Send me to the Frends Portal to create a Private Application token with the Platform MCP permissions and tell me to copy it. Do not ask me to paste the token here.
+4. Ask which operating system I use and whether I start Claude Code from a terminal or from an editor, then give me only the commands that fit to set FRENDS_MCP_URL and FRENDS_MCP_TOKEN so that Claude Code sees them.
+5. Tell me to restart Claude Code, and end with the one line I should paste after the restart so you can check the connection and fix it with me if it is not working.
+```
+
+After the restart, paste this, or the line Claude gave you:
+
+```
+Check my Frends connection. Tell me whether the frends plugin server is connected and what my Frends version, Environments and Agent Groups are. If anything is missing, walk me through fixing it.
+```
+
+You are connected when the answer names your Frends version, your Environments and your
+Agent Groups. An apology that no Frends tools are available means the two variables are not
+set in the environment Claude Code started from; the answer walks you through it, and the
+Troubleshooting section below lists the same cases.
+
+### By hand
+
+Add the marketplace and install the plugin, either inside a session:
 
 ```
 /plugin marketplace add Frends-Product-Management/frends-claude-plugin
 /plugin install frends@frends
 ```
 
-Then set the two variables in the environment Claude Code will see.
+or from a terminal:
 
-macOS and Linux:
+```bash
+claude plugin marketplace add Frends-Product-Management/frends-claude-plugin
+claude plugin install frends@frends
+```
+
+Then set the two variables in the environment Claude Code will see. That is the environment
+of the process that starts Claude Code: a terminal reads your shell profile, but an editor
+started from the Dock or the Start menu does not.
+
+macOS and Linux, from a terminal:
 
 ```bash
 export FRENDS_MCP_URL="https://<your-tenant>.frendsapp.com/mcp"
 export FRENDS_MCP_TOKEN="<your token>"
 ```
 
+Put the same two lines in your shell profile to keep them across sessions. On macOS, when
+Claude Code runs inside an editor you start from the Dock, the profile is not read; set the
+values for the whole login session instead, then restart the editor:
+
+```bash
+launchctl setenv FRENDS_MCP_URL "https://<your-tenant>.frendsapp.com/mcp"
+launchctl setenv FRENDS_MCP_TOKEN "<your token>"
+```
+
 On Windows, `$env:` sets a variable for the current PowerShell session only, while `setx`
-stores it for future sessions. Use both if you want it available now and later.
+stores it for future sessions and for editors started from the Start menu. Use both if you
+want it available now and later.
 
 ```powershell
 $env:FRENDS_MCP_URL = "https://<your-tenant>.frendsapp.com/mcp"
@@ -47,7 +99,15 @@ setx FRENDS_MCP_URL "https://<your-tenant>.frendsapp.com/mcp"
 setx FRENDS_MCP_TOKEN "<your token>"
 ```
 
-Restart Claude Code so it reads the new values, then ask it to call `get_overview`.
+Restart Claude Code so it reads the new values. Then check two things: `/mcp` lists a server
+named `plugin:frends:frends` as connected, and asking for the tenant overview returns your
+Frends version, Environments and Agent Groups.
+
+If you already had a Frends MCP server configured by hand in Claude Code, remove it first
+(`claude mcp remove <name>`). Claude Code keeps a manually configured server over a plugin
+server with the same address, and then the plugin's permission prompt and agents have no
+tools to work with, while its skills still load. Nothing tells you this happened except the
+missing prompt.
 
 ## Install in Claude (web and Desktop)
 
@@ -141,7 +201,15 @@ and 404 cases produce an HTTP status code, so read the actual response first.
 
 **No Frends tools appear, or the server never starts.** Nothing reached the tenant, so
 there is no status code. Almost always `FRENDS_MCP_URL` and `FRENDS_MCP_TOKEN` are not set
-in the environment the client actually sees. Set them and restart the client.
+in the environment the client actually sees. Set them and restart the client. On macOS an
+editor started from the Dock does not read your shell profile; use `launchctl setenv` as
+shown above.
+
+**The skills are there, Frends tools answer, but the permission prompt never appears and the
+plugin's agents say they have no tools.** You have a Frends MCP server configured by hand
+with the same address. Claude Code keeps that one and drops the plugin's, and the plugin's
+hook and agents are bound to the plugin's server only. Remove the manual server with
+`claude mcp remove <name>` and restart; `/mcp` must then show `plugin:frends:frends`.
 
 **A call returns 401.** Either the token has expired, or its Private Application is not
 admitted by the tenant's API Policy. Both are fixed in the Portal.
@@ -258,9 +326,9 @@ reach anyone who already installed it.
 
 Before a release, keep this README's skill count and Contents table in sync with
 `frends/skills/`, and keep the "Check the session's tool list first" paragraph
-byte-identical across the skills that carry it. That paragraph is deliberately
-duplicated rather than shared: a skill body loads on its own, so a guard kept
-anywhere else would not be there when the skill runs.
+byte-identical across the skills that carry it. That paragraph is duplicated
+rather than shared because a skill body loads on its own, so a guard kept anywhere
+else would not be there when the skill runs.
 
 Every behavioural change gets an entry in [CHANGELOG.md](CHANGELOG.md), including a
 change to a skill's `description`. The description is what decides whether a skill is
